@@ -1,116 +1,47 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tren AIFA-Buenavista En Vivo</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Librerías de Firebase para sincronización en tiempo real -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
-        body, html { height: 100%; width: 100%; overflow: hidden; background-color: #0f172a; color: #f8fafc; }
-        #app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: relative; }
-        #header { background: rgba(15, 23, 42, 0.95); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 1000; }
-        .logo-container { display: flex; align-items: center; gap: 10px; }
-        .logo-icon { width: 36px; height: 36px; background: #2563eb; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .logo-title { font-size: 15px; font-weight: 700; color: #ffffff; }
-        .logo-subtitle { font-size: 11px; color: #94a3b8; }
-        .status-badge { background: #1e293b; border: 1px solid #334155; padding: 5px 10px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 6px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #eab308; }
-        .status-dot.active { background: #22c55e; }
-        #map { flex: 1; width: 100%; z-index: 1; }
-        #control-panel { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: calc(100% - 24px); max-width: 480px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; padding: 14px; z-index: 1000; }
-        .mode-selector { display: flex; background: #1e293b; border-radius: 10px; padding: 3px; margin-bottom: 10px; }
-        .mode-btn { flex: 1; padding: 8px; border: none; background: transparent; color: #94a3b8; font-size: 12px; font-weight: 600; border-radius: 7px; cursor: pointer; }
-        .mode-btn.active { background: #2563eb; color: #ffffff; }
-        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        select { width: 100%; padding: 9px; background: #1e293b; border: 1px solid #334155; color: #f8fafc; border-radius: 8px; font-size: 12px; outline: none; }
-        .info-card { background: #1e293b; border-radius: 10px; padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .info-item { display: flex; flex-direction: column; }
-        .info-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
-        .info-value { font-size: 13px; font-weight: 600; color: #f8fafc; margin-top: 2px; }
-        .action-btn { width: 100%; padding: 12px; border: none; border-radius: 10px; background: #16a34a; color: white; font-weight: 700; font-size: 14px; cursor: pointer; }
-        .action-btn.active-sharing { background: #dc2626; }
-        .custom-train-icon { background: #2563eb; border: 2.5px solid #ffffff; border-radius: 50%; color: white; text-align: center; line-height: 28px; font-size: 15px; box-shadow: 0 0 12px rgba(37, 99, 235, 0.8); }
-    </style>
-</head>
-<body>
-    <div id="app-container">
-        <div id="header">
-            <div class="logo-container">
-                <div class="logo-icon">🚆</div>
-                <div>
-                    <div class="logo-title">Tren AIFA-Buenavista</div>
-                    <div class="logo-subtitle">Rastreador GPS En Tiempo Real</div>
-                </div>
-            </div>
-            <div class="status-badge">
-                <div class="status-dot" id="status-dot"></div>
-                <span id="system-status">Modo Manual</span>
-            </div>
-        </div>
-
-        <div id="map"></div>
-
-        <div id="control-panel">
-            <div class="mode-selector">
-                <button class="mode-btn active" id="btn-mode-passenger" onclick="setMode('passenger')">👀 Ver Mapa</button>
-                <button class="mode-btn" id="btn-mode-report" onclick="setMode('report')">📍 Reportar Estación</button>
-                <button class="mode-btn" id="btn-mode-onboard" onclick="setMode('onboard')">📡 Transmitir GPS</button>
-            </div>
-
-            <div id="section-report" class="controls-grid" style="display:none;">
-                <select id="select-station" onchange="sendStationReport()">
-                    <option value="">Selecciona estación...</option>
-                </select>
-                <select id="select-direction" onchange="sendStationReport()">
-                    <option value="Hacia AIFA">Dirección: Hacia AIFA</option>
-                    <option value="Hacia Buenavista">Dirección: Hacia Buenavista</option>
-                </select>
-            </div>
-
-            <div class="info-card">
-                <div class="info-item">
-                    <span class="info-label">Ubicación del Tren</span>
-                    <span class="info-value" id="train-location">Cargando...</span>
-                </div>
-                <div class="info-item" style="text-align: right;">
-                    <span class="info-label">Sentido</span>
-                    <span class="info-value" id="train-direction">Hacia AIFA</span>
-                </div>
-            </div>
-
-            <button class="action-btn" id="main-action-btn" style="display:none;" onclick="toggleGpsTracking()">
-                <span>Activar Rastreo GPS en Vivo</span>
-            </button>
-        </div>
-    </div>
-
     <script>
-        // Configuración de la base de datos pública en tiempo real
+        // Configuración de Firebase
         const firebaseConfig = { databaseURL: "https://tren-aifa-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const dbRef = firebase.database().ref('tren_status');
 
-                const stations = [
+        // 1. ESTACIONES OFICIALES DEL RAMAL BUENAVISTA - AIFA
+        const stations = [
             { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
             { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
             { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
             { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
-            { name: "Lechería", lat: 19.5986, lng: -99.1830 },
-            { name: "Cueyamil", lat: 19.6178, lng: -99.1725 },
-            { name: "Tultitlán", lat: 19.6421, lng: -99.1590 },
-            { name: "Teyahualco", lat: 19.6645, lng: -99.1415 },
-            { name: "Prados Sur", lat: 19.6842, lng: -99.1090 },
-            { name: "Nextlalpan", lat: 19.7025, lng: -99.0655 },
-            { name: "Xaltocan", lat: 19.7280, lng: -99.0290 },
-            { name: "AIFA", lat: 19.7485, lng: -99.0140 }
+            { name: "Lechería (Bifurcación)", lat: 19.5986, lng: -99.1830 },
+            { name: "Cueyamil", lat: 19.6105, lng: -99.1550 },
+            { name: "Teyahualco", lat: 19.6450, lng: -99.1180 },
+            { name: "Prados Sur", lat: 19.6750, lng: -99.0880 },
+            { name: "Nextlalpan", lat: 19.7090, lng: -99.0550 },
+            { name: "Xaltocan", lat: 19.7320, lng: -99.0270 },
+            { name: "AIFA", lat: 19.7510, lng: -99.0180 }
         ];
 
+        // 2. TRAZO EXACTO DE LA VÍA FÉRREA (Sigue las vías reales y curvas en el mapa)
+        const exactRailwayPath = [
+            [19.4461, -99.1531], // Buenavista
+            [19.4893, -99.1714], // Fortuna
+            [19.5385, -99.1895], // Tlalnepantla
+            [19.5630, -99.1913], // San Rafael
+            [19.5986, -99.1830], // Lechería (Desvío al este)
+            [19.6015, -99.1720], // Curva salida Lechería
+            [19.6070, -99.1600], // Tramo Tultitlán norte
+            [19.6105, -99.1550], // Estación Cueyamil
+            [19.6230, -99.1390], // Tramo Tultepec
+            [19.6450, -99.1180], // Estación Teyahualco
+            [19.6600, -99.1020], // San Pablo de las Salinas
+            [19.6750, -99.0880], // Estación Prados Sur
+            [19.6920, -99.0710], // Tramo Jaltenco
+            [19.7090, -99.0550], // Estación Nextlalpan
+            [19.7220, -99.0380], // Entrada a Xaltocan
+            [19.7320, -99.0270], // Estación Xaltocan
+            [19.7420, -99.0200], // Curva de acceso al Aeropuerto
+            [19.7510, -99.0180]  // Terminal AIFA
+        ];
+
+        // Llenar selector de estaciones
         const selectEst = document.getElementById('select-station');
         stations.forEach((s, idx) => {
             let opt = document.createElement('option');
@@ -119,20 +50,28 @@
             selectEst.appendChild(opt);
         });
 
-        const map = L.map('map', { zoomControl: false }).setView([19.6845, -99.1412], 12);
+        // Inicializar Mapa centrado en la ruta
+        const map = L.map('map', { zoomControl: false }).setView([19.6300, -99.1200], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
 
-        const routeCoords = stations.map(s => [s.lat, s.lng]);
-        L.polyline(routeCoords, { color: '#2563eb', weight: 4, opacity: 0.8 }).addTo(map);
-        stations.forEach(s => L.circleMarker([s.lat, s.lng], { radius: 6, fillColor: '#ffffff', color: '#2563eb', weight: 2, fillOpacity: 1 }).addTo(map).bindPopup(`<b>${s.name}</b>`));
+        // DIBUJAR VÍA FÉRREA EXACTA (Trazo azul sobre el derecho de vía real)
+        L.polyline(exactRailwayPath, { color: '#2563eb', weight: 5, opacity: 0.85 }).addTo(map);
 
+        // Marcadores de las Estaciones
+        stations.forEach(s => {
+            L.circleMarker([s.lat, s.lng], { radius: 6, fillColor: '#ffffff', color: '#2563eb', weight: 2.5, fillOpacity: 1 })
+             .addTo(map)
+             .bindPopup(`<b>Estación: ${s.name}</b>`);
+        });
+
+        // Icono del Tren
         const trainIcon = L.divIcon({ className: 'custom-train-icon', html: '🚆', iconSize: [32, 32], iconAnchor: [16, 16] });
-        let trainMarker = L.marker([stations[7].lat, stations[7].lng], { icon: trainIcon }).addTo(map);
+        let trainMarker = L.marker([stations[6].lat, stations[6].lng], { icon: trainIcon }).addTo(map);
 
         let watchId = null;
         let isSharing = false;
 
-        // RECIBIR REPORTES EN TIEMPO REAL (Escuchador activo para todos los usuarios)
+        // Escuchar cambios en la Base de Datos Firebase
         dbRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -145,7 +84,7 @@
             }
         });
 
-        // ENVIAR REPORTE MANUAL DE ESTACIÓN
+        // Enviar Reporte Manual
         function sendStationReport() {
             const idx = selectEst.value;
             const dir = document.getElementById('select-direction').value;
@@ -162,7 +101,7 @@
             }
         }
 
-        // ENVIAR REPORTE VÍA GPS CONTINUO
+        // Transmisión GPS en Vivo
         function toggleGpsTracking() {
             const btn = document.getElementById('main-action-btn');
             if (!isSharing) {
@@ -173,7 +112,6 @@
                         const lng = pos.coords.longitude;
                         const dir = document.getElementById('select-direction').value;
 
-                        // Publicar en la base de datos para todos
                         dbRef.set({
                             lat: lat,
                             lng: lng,
@@ -204,7 +142,5 @@
             document.getElementById('section-report').style.display = (mode === 'report') ? 'grid' : 'none';
             document.getElementById('main-action-btn').style.display = (mode === 'onboard') ? 'block' : 'none';
         }
-    </script>
-</body>
-  </html>
-  
+            </script>
+            
