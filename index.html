@@ -2,32 +2,88 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tren AIFA-Buenavista En Vivo</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body, html { height: 100%; width: 100%; overflow: hidden; background: #0f172a; color: #f8fafc; }
         #app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: relative; }
-        #header { background: #0f172a; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 1000; }
+        #header { background: #0f172a; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 1000; }
         .logo-title { font-size: 15px; font-weight: bold; color: #fff; }
         .logo-sub { font-size: 11px; color: #94a3b8; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #eab308; display: inline-block; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #eab308; display: inline-block; margin-right: 4px; }
         .status-dot.active { background: #22c55e; }
         #map { flex: 1; width: 100%; z-index: 1; }
-        #panel { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: calc(100% - 24px); max-width: 480px; background: rgba(15, 23, 42, 0.95); border-radius: 16px; padding: 12px; z-index: 1000; border: 1px solid #334155; }
-        .btn-group { display: flex; gap: 4px; background: #1e293b; padding: 3px; border-radius: 8px; margin-bottom: 8px; }
-        .btn { flex: 1; padding: 8px; border: none; background: transparent; color: #94a3b8; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        
+        #panel { 
+            position: absolute; 
+            bottom: calc(12px + env(safe-area-inset-bottom)); 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: calc(100% - 20px); 
+            max-width: 450px; 
+            background: rgba(15, 23, 42, 0.96); 
+            backdrop-filter: blur(8px);
+            border-radius: 14px; 
+            padding: 10px; 
+            z-index: 1000; 
+            border: 1px solid #334155; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            max-height: 45vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .btn-group { display: flex; gap: 4px; background: #1e293b; padding: 3px; border-radius: 8px; margin-bottom: 6px; }
+        .btn { flex: 1; padding: 7px 2px; border: none; background: transparent; color: #94a3b8; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; text-align: center; }
         .btn.active { background: #2563eb; color: #fff; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
-        select { width: 100%; padding: 8px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; }
-        .card { background: #1e293b; padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 12px; }
-        .main-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #16a34a; color: white; font-weight: bold; margin-top: 8px; font-size: 13px; cursor: pointer; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+        select, input { width: 100%; padding: 7px 8px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 11px; }
+        .card { background: #1e293b; padding: 8px 10px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 11px; }
+        
+        .main-btn { 
+            width: 100%; 
+            padding: 9px; 
+            border: none; 
+            border-radius: 8px; 
+            background: #16a34a; 
+            color: white; 
+            font-weight: bold; 
+            margin-top: 6px; 
+            font-size: 12px; 
+            cursor: pointer; 
+        }
         .main-btn.sharing { background: #dc2626; }
-        .train-icon { background: #2563eb; border: 2px solid #fff; border-radius: 50%; color: white; text-align: center; line-height: 28px; font-size: 14px; }
+        .train-icon { background: #2563eb; border: 2px solid #fff; border-radius: 50%; color: white; text-align: center; line-height: 26px; font-size: 13px; }
+
+        /* Estilos del Feed de Reportes Estilo Amigo Suburbano */
+        #feed-container {
+            overflow-y: auto;
+            max-height: 180px;
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .report-item {
+            background: #1e293b;
+            border-left: 3px solid #2563eb;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            color: #94a3b8;
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+        .report-msg { color: #f8fafc; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -35,32 +91,48 @@
         <div id="header">
             <div>
                 <div class="logo-title">🚆 Tren AIFA-Buenavista</div>
-                <div class="logo-sub">Monitoreo en Tiempo Real</div>
+                <div class="logo-sub">Comunidad & Monitoreo</div>
             </div>
-            <div style="font-size: 11px;">
+            <div style="font-size: 11px; display: flex; align-items: center;">
                 <span class="status-dot" id="dot"></span> <span id="st-txt">Manual</span>
             </div>
         </div>
         <div id="map"></div>
         <div id="panel">
             <div class="btn-group">
-                <button class="btn active" id="b1" onclick="sm('passenger')">Ver Mapa</button>
-                <button class="btn" id="b2" onclick="sm('report')">Reportar Estación</button>
-                <button class="btn" id="b3" onclick="sm('onboard')">Transmitir GPS</button>
+                <button class="btn active" id="b1" onclick="sm('passenger')">Mapa</button>
+                <button class="btn" id="b2" onclick="sm('report')">Pasar Tren</button>
+                <button class="btn" id="b3" onclick="sm('feed')">📢 Reportes</button>
+                <button class="btn" id="b4" onclick="sm('onboard')">GPS</button>
             </div>
+
+            <!-- Sección: Reportar Paso del Tren -->
             <div id="sec-rep" class="grid" style="display:none;">
                 <select id="sel-st" onchange="sendReport()">
-                    <option value="">Estación...</option>
+                    <option value="">Seleccionar estación...</option>
                 </select>
                 <select id="sel-dir" onchange="sendReport()">
                     <option value="Hacia AIFA">Hacia AIFA</option>
                     <option value="Hacia Buenavista">Hacia Buenavista</option>
                 </select>
             </div>
-            <div class="card">
+
+            <!-- Sección: Muro de Reportes de Incidencias / Retrasos -->
+            <div id="sec-feed" style="display:none;">
+                <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+                    <input type="text" id="inp-msg" placeholder="Ej: Retraso de 10 min en Buenavista..." />
+                    <button style="background: #2563eb; color: white; border: none; padding: 0 10px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer;" onclick="sendIncidence()">Enviar</button>
+                </div>
+                <div id="feed-container">
+                    <div style="text-align: center; color: #94a3b8; font-size: 11px;">Cargando reportes...</div>
+                </div>
+            </div>
+
+            <div class="card" id="card-status">
                 <div><span>Ubicación: </span><b id="lbl-loc">Cargando...</b></div>
                 <div><b id="lbl-dir">Hacia AIFA</b></div>
             </div>
+
             <button class="main-btn" id="btn-gps" style="display:none;" onclick="toggleGps()">Activar GPS en Vivo</button>
         </div>
     </div>
@@ -68,7 +140,9 @@
     <script>
         var fbConfig = { databaseURL: "https://tren-aifa-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(fbConfig);
-        var db = firebase.database().ref('tren_status');
+        var db = firebase.database();
+        var statusRef = db.ref('tren_status');
+        var feedRef = db.ref('community_reports');
 
         var stList = [
             { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
@@ -85,62 +159,37 @@
             { name: "AIFA", lat: 19.7510, lng: -99.0180 }
         ];
 
-        // Trazo detallado curva por curva calcado sobre el derecho de vía
         var track = [
-            [19.4461, -99.1531], // Buenavista
-            [19.4520, -99.1555], // Salida Buenavista
-            [19.4580, -99.1590], // Nonoalco / Tlatelolco
-            [19.4675, -99.1650], // Curva La Raza
-            [19.4770, -99.1710], // Entrada Patio Pantaco
-            [19.4893, -99.1714], // Fortuna
-            [19.5020, -99.1735], // Patio Ferrocarril del Valle
-            [19.5150, -99.1770], // Ferrería / Valjo
-            [19.5280, -99.1835], // Acuitlapilco
-            [19.5385, -99.1895], // Tlalnepantla
-            [19.5510, -99.1910], // Tenayo
-            [19.5630, -99.1913], // San Rafael
-            [19.5800, -99.1890], // Rumbo a Lechería
-            [19.5986, -99.1830], // Lechería (Punto de desvío al ramal AIFA)
-            [19.6002, -99.1770], // Curva de integración
-            [19.6055, -99.1630], // Av. Recursos Hidráulicos
-            [19.6135, -99.1480], // Cueyamil
-            [19.6200, -99.1380], // La Loma
-            [19.6290, -99.1305], // Tramo a Teyahualco
-            [19.6480, -99.1120], // Teyahualco
-            [19.6690, -99.0945], // San Pablo de las Salinas
-            [19.6880, -99.0770], // Prados Sur
-            [19.7085, -99.0580], // Nextlalpan
-            [19.7290, -99.0305], // Xaltocan
-            [19.7420, -99.0200], // Acceso Base Militar
-            [19.7510, -99.0180]  // AIFA Terminal
+            [19.4461, -99.1531], [19.4580, -99.1590], [19.4770, -99.1710],
+            [19.4893, -99.1714], [19.5150, -99.1770], [19.5385, -99.1895],
+            [19.5630, -99.1913], [19.5986, -99.1830], [19.6055, -99.1630],
+            [19.6135, -99.1480], [19.6200, -99.1380], [19.6480, -99.1120],
+            [19.6880, -99.0770], [19.7085, -99.0580], [19.7290, -99.0305],
+            [19.7510, -99.0180]
         ];
 
         var sel = document.getElementById('sel-st');
         stList.forEach(function(s, i) {
             var o = document.createElement('option');
-            o.value = i; 
-            o.innerText = s.name;
+            o.value = i; o.innerText = s.name;
             sel.appendChild(o);
         });
 
-        var map = L.map('map', { zoomControl: false }).setView([19.6300, -99.1200], 11);
+        var map = L.map('map', { zoomControl: false }).setView([19.6000, -99.1200], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Renderiza el trazo azul
         L.polyline(track, { color: '#2563eb', weight: 5, opacity: 0.9 }).addTo(map);
 
-        // Marcadores de estaciones
         stList.forEach(function(s) {
             L.circleMarker([s.lat, s.lng], { radius: 5, fillColor: '#fff', color: '#2563eb', weight: 2.5, fillOpacity: 1 }).addTo(map);
         });
 
-        // Icono interactivo del Tren
-        var tIcon = L.divIcon({ className: 'train-icon', html: '🚆', iconSize: [28, 28], iconAnchor: [14, 14] });
-        var marker = L.marker([stList[7].lat, stList[7].lng], { icon: tIcon }).addTo(map);
+        var tIcon = L.divIcon({ className: 'train-icon', html: '🚆', iconSize: [26, 26], iconAnchor: [13, 13] });
+        var marker = L.marker([stList[0].lat, stList[0].lng], { icon: tIcon }).addTo(map);
 
         var watchId = null, isLive = false;
 
-        db.on('value', function(snap) {
+        statusRef.on('value', function(snap) {
             var d = snap.val();
             if (d) {
                 marker.setLatLng([d.lat, d.lng]);
@@ -152,12 +201,41 @@
             }
         });
 
+        // Escuchar reportes comunitarios en tiempo real
+        feedRef.limitToLast(15).on('value', function(snap) {
+            var container = document.getElementById('feed-container');
+            container.innerHTML = '';
+            var data = snap.val();
+            if (data) {
+                var items = Object.values(data).reverse();
+                items.forEach(function(item) {
+                    var div = document.createElement('div');
+                    div.className = 'report-item';
+                    div.innerHTML = '<div class="report-header"><span>Usuario</span><span>' + item.time + '</span></div><div class="report-msg">' + item.text + '</div>';
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = '<div style="text-align: center; color: #94a3b8; font-size: 11px;">No hay reportes recientes.</div>';
+            }
+        });
+
         function sendReport() {
             var idx = sel.value;
             var dir = document.getElementById('sel-dir').value;
             if (idx !== "") {
                 var s = stList[idx];
-                db.set({ lat: s.lat, lng: s.lng, locationName: s.name, direction: dir, isGps: false });
+                statusRef.set({ lat: s.lat, lng: s.lng, locationName: s.name, direction: dir, isGps: false });
+            }
+        }
+
+        function sendIncidence() {
+            var inp = document.getElementById('inp-msg');
+            var txt = inp.value.trim();
+            if (txt !== "") {
+                var now = new Date();
+                var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                feedRef.push({ text: txt, time: timeStr });
+                inp.value = '';
             }
         }
 
@@ -168,7 +246,7 @@
                     watchId = navigator.geolocation.watchPosition(function(pos) {
                         isLive = true;
                         var dir = document.getElementById('sel-dir').value;
-                        db.set({ lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: "En trayecto (GPS)", direction: dir, isGps: true });
+                        statusRef.set({ lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: "En trayecto (GPS)", direction: dir, isGps: true });
                         btn.className = 'main-btn sharing';
                         btn.innerText = '🔴 Detener GPS';
                     }, function(err) { alert("Error GPS: " + err.message); }, { enableHighAccuracy: true });
@@ -184,10 +262,14 @@
         function sm(m) {
             document.getElementById('b1').className = 'btn' + (m==='passenger'?' active':'');
             document.getElementById('b2').className = 'btn' + (m==='report'?' active':'');
-            document.getElementById('b3').className = 'btn' + (m==='onboard'?' active':'');
+            document.getElementById('b3').className = 'btn' + (m==='feed'?' active':'');
+            document.getElementById('b4').className = 'btn' + (m==='onboard'?' active':'');
+
             document.getElementById('sec-rep').style.display = (m==='report') ? 'grid' : 'none';
+            document.getElementById('sec-feed').style.display = (m==='feed') ? 'block' : 'none';
             document.getElementById('btn-gps').style.display = (m==='onboard') ? 'block' : 'none';
         }
     </script>
 </body>
-</html>
+                </html>
+                
