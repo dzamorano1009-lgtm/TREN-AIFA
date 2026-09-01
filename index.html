@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tren AIFA-Buenavista En Vivo</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -10,8 +10,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body, html { height: 100%; width: 100%; overflow: hidden; background: #0f172a; color: #f8fafc; }
-        #app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: relative; }
+        html, body { height: 100dvh; width: 100vw; overflow: hidden; background: #0f172a; color: #f8fafc; }
+        #app-container { display: flex; flex-direction: column; height: 100dvh; width: 100vw; position: relative; }
         #header { background: #0f172a; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 1000; }
         .logo-title { font-size: 15px; font-weight: bold; color: #fff; }
         .logo-sub { font-size: 11px; color: #94a3b8; }
@@ -19,21 +19,22 @@
         .status-dot.active { background: #22c55e; }
         #map { flex: 1; width: 100%; z-index: 1; }
         
+        /* Panel elevado a 35px para que nunca quede tapado */
         #panel { 
             position: absolute; 
-            bottom: calc(12px + env(safe-area-inset-bottom)); 
+            bottom: 35px; 
             left: 50%; 
             transform: translateX(-50%); 
-            width: calc(100% - 20px); 
-            max-width: 450px; 
+            width: calc(100% - 24px); 
+            max-width: 440px; 
             background: rgba(15, 23, 42, 0.96); 
             backdrop-filter: blur(8px);
             border-radius: 14px; 
             padding: 10px; 
             z-index: 1000; 
             border: 1px solid #334155; 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-            max-height: 45vh;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-height: 40dvh;
             display: flex;
             flex-direction: column;
         }
@@ -60,10 +61,9 @@
         .main-btn.sharing { background: #dc2626; }
         .train-icon { background: #2563eb; border: 2px solid #fff; border-radius: 50%; color: white; text-align: center; line-height: 26px; font-size: 13px; }
 
-        /* Estilos del Feed de Reportes Estilo Amigo Suburbano */
         #feed-container {
             overflow-y: auto;
-            max-height: 180px;
+            max-height: 150px;
             margin-top: 6px;
             display: flex;
             flex-direction: column;
@@ -106,7 +106,6 @@
                 <button class="btn" id="b4" onclick="sm('onboard')">GPS</button>
             </div>
 
-            <!-- Sección: Reportar Paso del Tren -->
             <div id="sec-rep" class="grid" style="display:none;">
                 <select id="sel-st" onchange="sendReport()">
                     <option value="">Seleccionar estación...</option>
@@ -117,7 +116,6 @@
                 </select>
             </div>
 
-            <!-- Sección: Muro de Reportes de Incidencias / Retrasos -->
             <div id="sec-feed" style="display:none;">
                 <div style="display: flex; gap: 4px; margin-bottom: 6px;">
                     <input type="text" id="inp-msg" placeholder="Ej: Retraso de 10 min en Buenavista..." />
@@ -201,7 +199,6 @@
             }
         });
 
-        // Escuchar reportes comunitarios en tiempo real
         feedRef.limitToLast(15).on('value', function(snap) {
             var container = document.getElementById('feed-container');
             container.innerHTML = '';
@@ -271,5 +268,4 @@
         }
     </script>
 </body>
-                </html>
-                
+</html>
