@@ -19,7 +19,6 @@
         .status-dot.active { background: #22c55e; }
         #map { flex: 1; width: 100%; z-index: 1; }
         
-        /* Panel elevado a 35px para que nunca quede tapado */
         #panel { 
             position: absolute; 
             bottom: 35px; 
@@ -42,8 +41,6 @@
         .btn-group { display: flex; gap: 4px; background: #1e293b; padding: 3px; border-radius: 8px; margin-bottom: 6px; }
         .btn { flex: 1; padding: 7px 2px; border: none; background: transparent; color: #94a3b8; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; text-align: center; }
         .btn.active { background: #2563eb; color: #fff; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
-        select, input { width: 100%; padding: 7px 8px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 11px; }
         .card { background: #1e293b; padding: 8px 10px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 11px; }
         
         .main-btn { 
@@ -84,6 +81,24 @@
             margin-bottom: 2px;
         }
         .report-msg { color: #f8fafc; font-weight: 500; }
+
+        /* Estilo para emergente tipo Amigo Suburbano */
+        .station-popup { font-family: system-ui, -apple-system, sans-serif; text-align: center; }
+        .station-popup h4 { font-size: 13px; color: #0f172a; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+        .popup-btn { 
+            display: block; 
+            width: 100%; 
+            padding: 6px; 
+            margin: 4px 0; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: white;
+        }
+        .btn-train-aifa { background: #2563eb; }
+        .btn-train-bv { background: #0284c7; }
     </style>
 </head>
 <body>
@@ -101,24 +116,13 @@
         <div id="panel">
             <div class="btn-group">
                 <button class="btn active" id="b1" onclick="sm('passenger')">Mapa</button>
-                <button class="btn" id="b2" onclick="sm('report')">Pasar Tren</button>
                 <button class="btn" id="b3" onclick="sm('feed')">📢 Reportes</button>
                 <button class="btn" id="b4" onclick="sm('onboard')">GPS</button>
             </div>
 
-            <div id="sec-rep" class="grid" style="display:none;">
-                <select id="sel-st" onchange="sendReport()">
-                    <option value="">Seleccionar estación...</option>
-                </select>
-                <select id="sel-dir" onchange="sendReport()">
-                    <option value="Hacia AIFA">Hacia AIFA</option>
-                    <option value="Hacia Buenavista">Hacia Buenavista</option>
-                </select>
-            </div>
-
             <div id="sec-feed" style="display:none;">
                 <div style="display: flex; gap: 4px; margin-bottom: 6px;">
-                    <input type="text" id="inp-msg" placeholder="Ej: Retraso de 10 min en Buenavista..." />
+                    <input type="text" id="inp-msg" placeholder="Ej: Retraso de 10 min en Buenavista..." style="width:100%; padding:7px; background:#1e293b; border:1px solid #334155; color:#fff; border-radius:6px; font-size:11px;" />
                     <button style="background: #2563eb; color: white; border: none; padding: 0 10px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer;" onclick="sendIncidence()">Enviar</button>
                 </div>
                 <div id="feed-container">
@@ -142,44 +146,64 @@
         var statusRef = db.ref('tren_status');
         var feedRef = db.ref('community_reports');
 
+        // Estaciones oficiales ramal AIFA
         var stList = [
             { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
             { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
             { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
             { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
             { name: "Lechería", lat: 19.5986, lng: -99.1830 },
-            { name: "Cueyamil", lat: 19.6135, lng: -99.1480 },
-            { name: "La Loma", lat: 19.6200, lng: -99.1380 },
-            { name: "Teyahualco", lat: 19.6480, lng: -99.1120 },
-            { name: "Prados Sur", lat: 19.6880, lng: -99.0770 },
-            { name: "Nextlalpan", lat: 19.7085, lng: -99.0580 },
-            { name: "Xaltocan", lat: 19.7290, lng: -99.0305 },
+            { name: "Cueyamil", lat: 19.6080, lng: -99.1560 },
+            { name: "Los Agaves", lat: 19.6175, lng: -99.1350 },
+            { name: "Teyahualco", lat: 19.6380, lng: -99.1020 },
+            { name: "Prados Sur", lat: 19.6640, lng: -99.0730 },
+            { name: "Nextlalpan", lat: 19.7020, lng: -99.0510 },
+            { name: "Jaltocan", lat: 19.7280, lng: -99.0300 },
             { name: "AIFA", lat: 19.7510, lng: -99.0180 }
         ];
 
+        // Trazo REAL siguiendo el ramal ferroviario hacia el noreste (Tultitlán/Tultepec)
         var track = [
-            [19.4461, -99.1531], [19.4580, -99.1590], [19.4770, -99.1710],
-            [19.4893, -99.1714], [19.5150, -99.1770], [19.5385, -99.1895],
-            [19.5630, -99.1913], [19.5986, -99.1830], [19.6055, -99.1630],
-            [19.6135, -99.1480], [19.6200, -99.1380], [19.6480, -99.1120],
-            [19.6880, -99.0770], [19.7085, -99.0580], [19.7290, -99.0305],
-            [19.7510, -99.0180]
+            [19.4461, -99.1531], // Buenavista
+            [19.4893, -99.1714], // Fortuna
+            [19.5385, -99.1895], // Tlalnepantla
+            [19.5630, -99.1913], // San Rafael
+            [19.5986, -99.1830], // Lechería (Bifurcación)
+            [19.6015, -99.1720], // Curva de salida a ramal AIFA
+            [19.6080, -99.1560], // Cueyamil
+            [19.6175, -99.1350], // Los Agaves
+            [19.6380, -99.1020], // Teyahualco (Tultepec)
+            [19.6640, -99.0730], // Prados Sur
+            [19.7020, -99.0510], // Nextlalpan
+            [19.7280, -99.0300], // Jaltocan
+            [19.7510, -99.0180]  // Terminal AIFA
         ];
-
-        var sel = document.getElementById('sel-st');
-        stList.forEach(function(s, i) {
-            var o = document.createElement('option');
-            o.value = i; o.innerText = s.name;
-            sel.appendChild(o);
-        });
 
         var map = L.map('map', { zoomControl: false }).setView([19.6000, -99.1200], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+        // Dibujar vía del tren
         L.polyline(track, { color: '#2563eb', weight: 5, opacity: 0.9 }).addTo(map);
 
-        stList.forEach(function(s) {
-            L.circleMarker([s.lat, s.lng], { radius: 5, fillColor: '#fff', color: '#2563eb', weight: 2.5, fillOpacity: 1 }).addTo(map);
+        // Marcadores interactivos para reporte al tocar
+        stList.forEach(function(s, index) {
+            var circle = L.circleMarker([s.lat, s.lng], { 
+                radius: 6, 
+                fillColor: '#fff', 
+                color: '#2563eb', 
+                weight: 3, 
+                fillOpacity: 1 
+            }).addTo(map);
+
+            var popupContent = `
+                <div class="station-popup">
+                    <h4>Estación ${s.name}</h4>
+                    <p style="font-size:10px; color:#64748b; margin-bottom:6px;">Reportar paso de tren:</p>
+                    <button class="popup-btn btn-train-aifa" onclick="quickReport(${index}, 'Hacia AIFA')">🚆 Pasó hacia AIFA</button>
+                    <button class="popup-btn btn-train-bv" onclick="quickReport(${index}, 'Hacia Buenavista')">🚆 Pasó hacia Buenavista</button>
+                </div>
+            `;
+            circle.bindPopup(popupContent);
         });
 
         var tIcon = L.divIcon({ className: 'train-icon', html: '🚆', iconSize: [26, 26], iconAnchor: [13, 13] });
@@ -216,13 +240,16 @@
             }
         });
 
-        function sendReport() {
-            var idx = sel.value;
-            var dir = document.getElementById('sel-dir').value;
-            if (idx !== "") {
-                var s = stList[idx];
-                statusRef.set({ lat: s.lat, lng: s.lng, locationName: s.name, direction: dir, isGps: false });
-            }
+        // Función para reportar con 1 clic desde la estación en el mapa
+        function quickReport(idx, dir) {
+            var s = stList[idx];
+            statusRef.set({ lat: s.lat, lng: s.lng, locationName: s.name, direction: dir, isGps: false });
+            map.closePopup();
+            
+            // Añadir automáticamente al feed
+            var now = new Date();
+            var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            feedRef.push({ text: `Tren detectado en ${s.name} (${dir})`, time: timeStr });
         }
 
         function sendIncidence() {
@@ -242,8 +269,7 @@
                 if (navigator.geolocation) {
                     watchId = navigator.geolocation.watchPosition(function(pos) {
                         isLive = true;
-                        var dir = document.getElementById('sel-dir').value;
-                        statusRef.set({ lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: "En trayecto (GPS)", direction: dir, isGps: true });
+                        statusRef.set({ lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: "En trayecto (GPS)", direction: "En movimiento", isGps: true });
                         btn.className = 'main-btn sharing';
                         btn.innerText = '🔴 Detener GPS';
                     }, function(err) { alert("Error GPS: " + err.message); }, { enableHighAccuracy: true });
@@ -258,11 +284,9 @@
 
         function sm(m) {
             document.getElementById('b1').className = 'btn' + (m==='passenger'?' active':'');
-            document.getElementById('b2').className = 'btn' + (m==='report'?' active':'');
             document.getElementById('b3').className = 'btn' + (m==='feed'?' active':'');
             document.getElementById('b4').className = 'btn' + (m==='onboard'?' active':'');
 
-            document.getElementById('sec-rep').style.display = (m==='report') ? 'grid' : 'none';
             document.getElementById('sec-feed').style.display = (m==='feed') ? 'block' : 'none';
             document.getElementById('btn-gps').style.display = (m==='onboard') ? 'block' : 'none';
         }
