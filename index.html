@@ -96,19 +96,19 @@
         firebase.initializeApp(firebaseConfig);
         const dbRef = firebase.database().ref('tren_status');
 
-        const stations = [
-            { name: "Buenavista", lat: 19.4461, lng: -99.1533 },
-            { name: "Fortuna", lat: 19.4891, lng: -99.1702 },
-            { name: "Tlalnepantla", lat: 19.5381, lng: -99.1891 },
-            { name: "San Rafael", lat: 19.5631, lng: -99.1912 },
-            { name: "Lechería", lat: 19.5989, lng: -99.1831 },
-            { name: "Cueyamil", lat: 19.6381, lng: -99.1764 },
-            { name: "La Loma", lat: 19.6612, lng: -99.1581 },
-            { name: "Teyahualco", lat: 19.6845, lng: -99.1412 },
-            { name: "Prados Sur", lat: 19.7081, lng: -99.1123 },
-            { name: "Nextlalpan", lat: 19.7281, lng: -99.0681 },
-            { name: "Xaltocan", lat: 19.7410, lng: -99.0125 },
-            { name: "AIFA", lat: 19.7523, lng: -99.0182 }
+                const stations = [
+            { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
+            { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
+            { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
+            { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
+            { name: "Lechería", lat: 19.5986, lng: -99.1830 },
+            { name: "Cueyamil", lat: 19.6178, lng: -99.1725 },
+            { name: "Tultitlán", lat: 19.6421, lng: -99.1590 },
+            { name: "Teyahualco", lat: 19.6645, lng: -99.1415 },
+            { name: "Prados Sur", lat: 19.6842, lng: -99.1090 },
+            { name: "Nextlalpan", lat: 19.7025, lng: -99.0655 },
+            { name: "Xaltocan", lat: 19.7280, lng: -99.0290 },
+            { name: "AIFA", lat: 19.7485, lng: -99.0140 }
         ];
 
         const selectEst = document.getElementById('select-station');
