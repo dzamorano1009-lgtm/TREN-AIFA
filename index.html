@@ -20,12 +20,12 @@
         #map { flex: 1; width: 100%; z-index: 1; }
         #panel { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: calc(100% - 24px); max-width: 480px; background: rgba(15, 23, 42, 0.95); border-radius: 16px; padding: 12px; z-index: 1000; border: 1px solid #334155; }
         .btn-group { display: flex; gap: 4px; background: #1e293b; padding: 3px; border-radius: 8px; margin-bottom: 8px; }
-        .btn { flex: 1; padding: 8px; border: none; background: transparent; color: #94a3b8; font-size: 12px; font-weight: bold; border-radius: 6px; }
+        .btn { flex: 1; padding: 8px; border: none; background: transparent; color: #94a3b8; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; }
         .btn.active { background: #2563eb; color: #fff; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
         select { width: 100%; padding: 8px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; }
         .card { background: #1e293b; padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 12px; }
-        .main-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #16a34a; color: white; font-weight: bold; margin-top: 8px; font-size: 13px; }
+        .main-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #16a34a; color: white; font-weight: bold; margin-top: 8px; font-size: 13px; cursor: pointer; }
         .main-btn.sharing { background: #dc2626; }
         .train-icon { background: #2563eb; border: 2px solid #fff; border-radius: 50%; color: white; text-align: center; line-height: 28px; font-size: 14px; }
     </style>
@@ -77,6 +77,7 @@
             { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
             { name: "Lechería", lat: 19.5986, lng: -99.1830 },
             { name: "Cueyamil", lat: 19.6135, lng: -99.1480 },
+            { name: "La Loma", lat: 19.6200, lng: -99.1380 },
             { name: "Teyahualco", lat: 19.6480, lng: -99.1120 },
             { name: "Prados Sur", lat: 19.6880, lng: -99.0770 },
             { name: "Nextlalpan", lat: 19.7085, lng: -99.0580 },
@@ -84,32 +85,58 @@
             { name: "AIFA", lat: 19.7510, lng: -99.0180 }
         ];
 
+        // Trazo detallado curva por curva calcado sobre el derecho de vía
         var track = [
-            [19.4461, -99.1531], [19.4893, -99.1714], [19.5385, -99.1895],
-            [19.5630, -99.1913], [19.5986, -99.1830], [19.6002, -99.1770],
-            [19.6055, -99.1630], [19.6135, -99.1480], [19.6290, -99.1305],
-            [19.6480, -99.1120], [19.6690, -99.0945], [19.6880, -99.0770],
-            [19.7085, -99.0580], [19.7290, -99.0305], [19.7420, -99.0200],
-            [19.7510, -99.0180]
+            [19.4461, -99.1531], // Buenavista
+            [19.4520, -99.1555], // Salida Buenavista
+            [19.4580, -99.1590], // Nonoalco / Tlatelolco
+            [19.4675, -99.1650], // Curva La Raza
+            [19.4770, -99.1710], // Entrada Patio Pantaco
+            [19.4893, -99.1714], // Fortuna
+            [19.5020, -99.1735], // Patio Ferrocarril del Valle
+            [19.5150, -99.1770], // Ferrería / Valjo
+            [19.5280, -99.1835], // Acuitlapilco
+            [19.5385, -99.1895], // Tlalnepantla
+            [19.5510, -99.1910], // Tenayo
+            [19.5630, -99.1913], // San Rafael
+            [19.5800, -99.1890], // Rumbo a Lechería
+            [19.5986, -99.1830], // Lechería (Punto de desvío al ramal AIFA)
+            [19.6002, -99.1770], // Curva de integración
+            [19.6055, -99.1630], // Av. Recursos Hidráulicos
+            [19.6135, -99.1480], // Cueyamil
+            [19.6200, -99.1380], // La Loma
+            [19.6290, -99.1305], // Tramo a Teyahualco
+            [19.6480, -99.1120], // Teyahualco
+            [19.6690, -99.0945], // San Pablo de las Salinas
+            [19.6880, -99.0770], // Prados Sur
+            [19.7085, -99.0580], // Nextlalpan
+            [19.7290, -99.0305], // Xaltocan
+            [19.7420, -99.0200], // Acceso Base Militar
+            [19.7510, -99.0180]  // AIFA Terminal
         ];
 
         var sel = document.getElementById('sel-st');
         stList.forEach(function(s, i) {
             var o = document.createElement('option');
-            o.value = i; o.innerText = s.name;
+            o.value = i; 
+            o.innerText = s.name;
             sel.appendChild(o);
         });
 
         var map = L.map('map', { zoomControl: false }).setView([19.6300, -99.1200], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        L.polyline(track, { color: '#2563eb', weight: 5 }).addTo(map);
 
+        // Renderiza el trazo azul
+        L.polyline(track, { color: '#2563eb', weight: 5, opacity: 0.9 }).addTo(map);
+
+        // Marcadores de estaciones
         stList.forEach(function(s) {
-            L.circleMarker([s.lat, s.lng], { radius: 5, fillColor: '#fff', color: '#2563eb', weight: 2, fillOpacity: 1 }).addTo(map);
+            L.circleMarker([s.lat, s.lng], { radius: 5, fillColor: '#fff', color: '#2563eb', weight: 2.5, fillOpacity: 1 }).addTo(map);
         });
 
+        // Icono interactivo del Tren
         var tIcon = L.divIcon({ className: 'train-icon', html: '🚆', iconSize: [28, 28], iconAnchor: [14, 14] });
-        var marker = L.marker([stList[6].lat, stList[6].lng], { icon: tIcon }).addTo(map);
+        var marker = L.marker([stList[7].lat, stList[7].lng], { icon: tIcon }).addTo(map);
 
         var watchId = null, isLive = false;
 
@@ -144,7 +171,7 @@
                         db.set({ lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: "En trayecto (GPS)", direction: dir, isGps: true });
                         btn.className = 'main-btn sharing';
                         btn.innerText = '🔴 Detener GPS';
-                    }, function(err) { alert("GPS Error: " + err.message); }, { enableHighAccuracy: true });
+                    }, function(err) { alert("Error GPS: " + err.message); }, { enableHighAccuracy: true });
                 }
             } else {
                 if (watchId) navigator.geolocation.clearWatch(watchId);
