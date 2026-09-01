@@ -82,7 +82,6 @@
         }
         .report-msg { color: #f8fafc; font-weight: 500; }
 
-        /* Estilo para emergente tipo Amigo Suburbano */
         .station-popup { font-family: system-ui, -apple-system, sans-serif; text-align: center; }
         .station-popup h4 { font-size: 13px; color: #0f172a; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
         .popup-btn { 
@@ -146,46 +145,53 @@
         var statusRef = db.ref('tren_status');
         var feedRef = db.ref('community_reports');
 
-        // Estaciones oficiales ramal AIFA
+        // Estaciones del Ramal AIFA con coordenadas corregidas sobre el derecho de vía real
         var stList = [
             { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
             { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
             { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
             { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
             { name: "Lechería", lat: 19.5986, lng: -99.1830 },
-            { name: "Cueyamil", lat: 19.6080, lng: -99.1560 },
-            { name: "Los Agaves", lat: 19.6175, lng: -99.1350 },
-            { name: "Teyahualco", lat: 19.6380, lng: -99.1020 },
-            { name: "Prados Sur", lat: 19.6640, lng: -99.0730 },
-            { name: "Nextlalpan", lat: 19.7020, lng: -99.0510 },
-            { name: "Jaltocan", lat: 19.7280, lng: -99.0300 },
+            { name: "Cueyamil", lat: 19.6053, lng: -99.1685 },
+            { name: "La Loma", lat: 19.6152, lng: -99.1438 },
+            { name: "Teyahualco", lat: 19.6320, lng: -99.1156 },
+            { name: "Prados Sur", lat: 19.6560, lng: -99.0880 },
+            { name: "Cajiga", lat: 19.6950, lng: -99.0665 },
+            { name: "Xaltocan", lat: 19.7225, lng: -99.0490 },
             { name: "AIFA", lat: 19.7510, lng: -99.0180 }
         ];
 
-        // Trazo REAL siguiendo el ramal ferroviario hacia el noreste (Tultitlán/Tultepec)
+        // Trazo detallado siguiendo la vía férrea real (Línea M/H paralela al Canal del Desagüe)
         var track = [
             [19.4461, -99.1531], // Buenavista
             [19.4893, -99.1714], // Fortuna
             [19.5385, -99.1895], // Tlalnepantla
             [19.5630, -99.1913], // San Rafael
-            [19.5986, -99.1830], // Lechería (Bifurcación)
-            [19.6015, -99.1720], // Curva de salida a ramal AIFA
-            [19.6080, -99.1560], // Cueyamil
-            [19.6175, -99.1350], // Los Agaves
-            [19.6380, -99.1020], // Teyahualco (Tultepec)
-            [19.6640, -99.0730], // Prados Sur
-            [19.7020, -99.0510], // Nextlalpan
-            [19.7280, -99.0300], // Jaltocan
+            [19.5986, -99.1830], // Lechería
+            [19.6005, -99.1775], // Salida del patio Lechería
+            [19.6053, -99.1685], // Cueyamil
+            [19.6105, -99.1550], 
+            [19.6152, -99.1438], // La Loma
+            [19.6235, -99.1298], // Tultepec Sur
+            [19.6320, -99.1156], // Teyahualco
+            [19.6440, -99.1010],
+            [19.6560, -99.0880], // Prados Sur
+            [19.6750, -99.0760], // Cruce Canal del Desagüe
+            [19.6950, -99.0665], // Nextlalpan
+            [19.7120, -99.0555], 
+            [19.7225, -99.0490], // Xaltocan / Santa Lucía
+            [19.7340, -99.0380], // Entrada a la base militar/AIFA
+            [19.7420, -99.0270],
             [19.7510, -99.0180]  // Terminal AIFA
         ];
 
-        var map = L.map('map', { zoomControl: false }).setView([19.6000, -99.1200], 11);
+        var map = L.map('map', { zoomControl: false }).setView([19.6200, -99.1200], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Dibujar vía del tren
+        // Trazo de la vía férrea en el mapa
         L.polyline(track, { color: '#2563eb', weight: 5, opacity: 0.9 }).addTo(map);
 
-        // Marcadores interactivos para reporte al tocar
+        // Marcadores de estaciones interactivos
         stList.forEach(function(s, index) {
             var circle = L.circleMarker([s.lat, s.lng], { 
                 radius: 6, 
@@ -240,13 +246,11 @@
             }
         });
 
-        // Función para reportar con 1 clic desde la estación en el mapa
         function quickReport(idx, dir) {
             var s = stList[idx];
             statusRef.set({ lat: s.lat, lng: s.lng, locationName: s.name, direction: dir, isGps: false });
             map.closePopup();
             
-            // Añadir automáticamente al feed
             var now = new Date();
             var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
             feedRef.push({ text: `Tren detectado en ${s.name} (${dir})`, time: timeStr });
