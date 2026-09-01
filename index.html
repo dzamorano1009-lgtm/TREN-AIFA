@@ -145,53 +145,52 @@
         var statusRef = db.ref('tren_status');
         var feedRef = db.ref('community_reports');
 
-        // Estaciones del Ramal AIFA con coordenadas corregidas sobre el derecho de vía real
+        // Estaciones ajustadas exactamente a las coordenadas del derecho de vía real
         var stList = [
             { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
             { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
             { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
             { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
             { name: "Lechería", lat: 19.5986, lng: -99.1830 },
-            { name: "Cueyamil", lat: 19.6053, lng: -99.1685 },
-            { name: "La Loma", lat: 19.6152, lng: -99.1438 },
-            { name: "Teyahualco", lat: 19.6320, lng: -99.1156 },
-            { name: "Prados Sur", lat: 19.6560, lng: -99.0880 },
-            { name: "Cajiga", lat: 19.6950, lng: -99.0665 },
-            { name: "Xaltocan", lat: 19.7225, lng: -99.0490 },
+            { name: "Cueyamil", lat: 19.6135, lng: -99.1602 },
+            { name: "La Loma", lat: 19.6258, lng: -99.1432 },
+            { name: "Teyahualco", lat: 19.6415, lng: -99.1170 },
+            { name: "Prados Sur", lat: 19.6640, lng: -99.0880 },
+            { name: "Nextlalpan", lat: 19.6950, lng: -99.0665 },
+            { name: "Jaltocan", lat: 19.7225, lng: -99.0490 },
             { name: "AIFA", lat: 19.7510, lng: -99.0180 }
         ];
 
-        // Trazo detallado siguiendo la vía férrea real (Línea M/H paralela al Canal del Desagüe)
+        // Trazo detallado trazado sobre la vía férrea visible en OpenStreetMap
         var track = [
             [19.4461, -99.1531], // Buenavista
             [19.4893, -99.1714], // Fortuna
             [19.5385, -99.1895], // Tlalnepantla
             [19.5630, -99.1913], // San Rafael
-            [19.5986, -99.1830], // Lechería
-            [19.6005, -99.1775], // Salida del patio Lechería
-            [19.6053, -99.1685], // Cueyamil
-            [19.6105, -99.1550], 
-            [19.6152, -99.1438], // La Loma
-            [19.6235, -99.1298], // Tultepec Sur
-            [19.6320, -99.1156], // Teyahualco
-            [19.6440, -99.1010],
-            [19.6560, -99.0880], // Prados Sur
-            [19.6750, -99.0760], // Cruce Canal del Desagüe
+            [19.5986, -99.1830], // Lechería (Patio de maniobras)
+            [19.6010, -99.1770], // Salida hacia el norte
+            [19.6060, -99.1695], // Curva hacia Vía López Portillo
+            [19.6135, -99.1602], // Cueyamil (Vía férrea real)
+            [19.6190, -99.1520], 
+            [19.6258, -99.1432], // La Loma / Tultepec
+            [19.6335, -99.1300], 
+            [19.6415, -99.1170], // Teyahualco
+            [19.6510, -99.1020], 
+            [19.6640, -99.0880], // Prados Sur
+            [19.6780, -99.0750], // Cruce Canal del Desagüe
             [19.6950, -99.0665], // Nextlalpan
-            [19.7120, -99.0555], 
-            [19.7225, -99.0490], // Xaltocan / Santa Lucía
-            [19.7340, -99.0380], // Entrada a la base militar/AIFA
-            [19.7420, -99.0270],
+            [19.7100, -99.0560], 
+            [19.7225, -99.0490], // Jaltocan
+            [19.7360, -99.0350], // Polígono AIFA
             [19.7510, -99.0180]  // Terminal AIFA
         ];
 
-        var map = L.map('map', { zoomControl: false }).setView([19.6200, -99.1200], 11);
+        var map = L.map('map', { zoomControl: false }).setView([19.6150, -99.1550], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Trazo de la vía férrea en el mapa
+        // Vía del tren ajustada sobre los rieles del mapa
         L.polyline(track, { color: '#2563eb', weight: 5, opacity: 0.9 }).addTo(map);
 
-        // Marcadores de estaciones interactivos
         stList.forEach(function(s, index) {
             var circle = L.circleMarker([s.lat, s.lng], { 
                 radius: 6, 
