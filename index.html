@@ -1,147 +1,166 @@
-         // Configuración de Firebase
-        const firebaseConfig = { databaseURL: "https://tren-aifa-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
-        const dbRef = firebase.database().ref('tren_status');
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tren AIFA-Buenavista En Vivo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+        body, html { height: 100%; width: 100%; overflow: hidden; background: #0f172a; color: #f8fafc; }
+        #app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: relative; }
+        #header { background: #0f172a; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 1000; }
+        .logo-title { font-size: 15px; font-weight: bold; color: #fff; }
+        .logo-sub { font-size: 11px; color: #94a3b8; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #eab308; display: inline-block; }
+        .status-dot.active { background: #22c55e; }
+        #map { flex: 1; width: 100%; z-index: 1; }
+        #panel { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: calc(100% - 24px); max-width: 480px; background: rgba(15, 23, 42, 0.95); border-radius: 16px; padding: 12px; z-index: 1000; border: 1px solid #334155; }
+        .btn-group { display: flex; gap: 4px; background: #1e293b; padding: 3px; border-radius: 8px; margin-bottom: 8px; }
+        .btn { flex: 1; padding: 8px; border: none; background: transparent; color: #94a3b8; font-size: 12px; font-weight: bold; border-radius: 6px; }
+        .btn.active { background: #2563eb; color: #fff; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+        select { width: 100%; padding: 8px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; }
+        .card { background: #1e293b; padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 12px; }
+        .main-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #16a34a; color: white; font-weight: bold; margin-top: 8px; font-size: 13px; }
+        .main-btn.sharing { background: #dc2626; }
+        .train-icon { background: #2563eb; border: 2px solid #fff; border-radius: 50%; color: white; text-align: center; line-height: 28px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="header">
+            <div>
+                <div class="logo-title">🚆 Tren AIFA-Buenavista</div>
+                <div class="logo-sub">Monitoreo en Tiempo Real</div>
+            </div>
+            <div style="font-size: 11px;">
+                <span class="status-dot" id="dot"></span> <span id="st-txt">Manual</span>
+            </div>
+        </div>
+        <div id="map"></div>
+        <div id="panel">
+            <div class="btn-group">
+                <button class="btn active" id="b1" onclick="sm('passenger')">Ver Mapa</button>
+                <button class="btn" id="b2" onclick="sm('report')">Reportar Estación</button>
+                <button class="btn" id="b3" onclick="sm('onboard')">Transmitir GPS</button>
+            </div>
+            <div id="sec-rep" class="grid" style="display:none;">
+                <select id="sel-st" onchange="sendReport()">
+                    <option value="">Estación...</option>
+                </select>
+                <select id="sel-dir" onchange="sendReport()">
+                    <option value="Hacia AIFA">Hacia AIFA</option>
+                    <option value="Hacia Buenavista">Hacia Buenavista</option>
+                </select>
+            </div>
+            <div class="card">
+                <div><span>Ubicación: </span><b id="lbl-loc">Cargando...</b></div>
+                <div><b id="lbl-dir">Hacia AIFA</b></div>
+            </div>
+            <button class="main-btn" id="btn-gps" style="display:none;" onclick="toggleGps()">Activar GPS en Vivo</button>
+        </div>
+    </div>
 
-        // 1. ESTACIONES OFICIALES DEL RAMAL BUENAVISTA - AIFA
-        const stations = [
+    <script>
+        var fbConfig = { databaseURL: "https://tren-aifa-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(fbConfig);
+        var db = firebase.database().ref('tren_status');
+
+        var stList = [
             { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
             { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
             { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
             { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
-            { name: "Lechería (Bifurcación)", lat: 19.5986, lng: -99.1830 },
-            { name: "Cueyamil", lat: 19.6105, lng: -99.1550 },
-            { name: "Teyahualco", lat: 19.6450, lng: -99.1180 },
-            { name: "Prados Sur", lat: 19.6750, lng: -99.0880 },
-            { name: "Nextlalpan", lat: 19.7090, lng: -99.0550 },
-            { name: "Xaltocan", lat: 19.7320, lng: -99.0270 },
+            { name: "Lechería", lat: 19.5986, lng: -99.1830 },
+            { name: "Cueyamil", lat: 19.6135, lng: -99.1480 },
+            { name: "Teyahualco", lat: 19.6480, lng: -99.1120 },
+            { name: "Prados Sur", lat: 19.6880, lng: -99.0770 },
+            { name: "Nextlalpan", lat: 19.7085, lng: -99.0580 },
+            { name: "Xaltocan", lat: 19.7290, lng: -99.0305 },
             { name: "AIFA", lat: 19.7510, lng: -99.0180 }
         ];
 
-        
-        // 2. TRAZO EXACTO DE LA VÍA FÉRREA (Sigue las vías reales y curvas en el mapa)
-        const exactRailwayPath = [
-            [19.4461, -99.1531], // Buenavista
-            [19.4893, -99.1714], // Fortuna
-            [19.5385, -99.1895], // Tlalnepantla
-            [19.5630, -99.1913], // San Rafael
-            [19.5986, -99.1830], // Lechería (Desvío al este)
-            [19.6015, -99.1720], // Curva salida Lechería
-            [19.6070, -99.1600], // Tramo Tultitlán norte
-            [19.6105, -99.1550], // Estación Cueyamil
-            [19.6230, -99.1390], // Tramo Tultepec
-            [19.6450, -99.1180], // Estación Teyahualco
-            [19.6600, -99.1020], // San Pablo de las Salinas
-            [19.6750, -99.0880], // Estación Prados Sur
-            [19.6920, -99.0710], // Tramo Jaltenco
-            [19.7090, -99.0550], // Estación Nextlalpan
-            [19.7220, -99.0380], // Entrada a Xaltocan
-            [19.7320, -99.0270], // Estación Xaltocan
-            [19.7420, -99.0200], // Curva de acceso al Aeropuerto
-            [19.7510, -99.0180]  // Terminal AIFA
+        var track = [
+            [19.4461, -99.1531], [19.4893, -99.1714], [19.5385, -99.1895],
+            [19.5630, -99.1913], [19.5986, -99.1830], [19.6002, -99.1770],
+            [19.6055, -99.1630], [19.6135, -99.1480], [19.6290, -99.1305],
+            [19.6480, -99.1120], [19.6690, -99.0945], [19.6880, -99.0770],
+            [19.7085, -99.0580], [19.7290, -99.0305], [19.7420, -99.0200],
+            [19.7510, -99.0180]
         ];
-        
 
-        // Llenar selector de estaciones
-        const selectEst = document.getElementById('select-station');
-        stations.forEach((s, idx) => {
-            let opt = document.createElement('option');
-            opt.value = idx;
-            opt.innerText = s.name;
-            selectEst.appendChild(opt);
+        var sel = document.getElementById('sel-st');
+        stList.forEach(function(s, i) {
+            var o = document.createElement('option');
+            o.value = i; o.innerText = s.name;
+            sel.appendChild(o);
         });
 
-        // Inicializar Mapa centrado en la ruta
-        const map = L.map('map', { zoomControl: false }).setView([19.6300, -99.1200], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+        var map = L.map('map', { zoomControl: false }).setView([19.6300, -99.1200], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.polyline(track, { color: '#2563eb', weight: 5 }).addTo(map);
 
-        // DIBUJAR VÍA FÉRREA EXACTA (Trazo azul sobre el derecho de vía real)
-        L.polyline(exactRailwayPath, { color: '#2563eb', weight: 5, opacity: 0.85 }).addTo(map);
-
-        // Marcadores de las Estaciones
-        stations.forEach(s => {
-            L.circleMarker([s.lat, s.lng], { radius: 6, fillColor: '#ffffff', color: '#2563eb', weight: 2.5, fillOpacity: 1 })
-             .addTo(map)
-             .bindPopup(`<b>Estación: ${s.name}</b>`);
+        stList.forEach(function(s) {
+            L.circleMarker([s.lat, s.lng], { radius: 5, fillColor: '#fff', color: '#2563eb', weight: 2, fillOpacity: 1 }).addTo(map);
         });
 
-        // Icono del Tren
-        const trainIcon = L.divIcon({ className: 'custom-train-icon', html: '🚆', iconSize: [32, 32], iconAnchor: [16, 16] });
-        let trainMarker = L.marker([stations[6].lat, stations[6].lng], { icon: trainIcon }).addTo(map);
+        var tIcon = L.divIcon({ className: 'train-icon', html: '🚆', iconSize: [28, 28], iconAnchor: [14, 14] });
+        var marker = L.marker([stList[6].lat, stList[6].lng], { icon: tIcon }).addTo(map);
 
-        let watchId = null;
-        let isSharing = false;
+        var watchId = null, isLive = false;
 
-        // Escuchar cambios en la Base de Datos Firebase
-        dbRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                trainMarker.setLatLng([data.lat, data.lng]);
-                map.panTo([data.lat, data.lng]);
-                document.getElementById('train-location').innerText = data.locationName;
-                document.getElementById('train-direction').innerText = data.direction;
-                document.getElementById('system-status').innerText = data.isGps ? "GPS en Vivo" : "Reporte Manual";
-                document.getElementById('status-dot').classList.toggle('active', data.isGps);
+        db.on('value', function(snap) {
+            var d = snap.val();
+            if (d) {
+                marker.setLatLng([d.lat, d.lng]);
+                map.panTo([d.lat, d.lng]);
+                document.getElementById('lbl-loc').innerText = d.locationName;
+                document.getElementById('lbl-dir').innerText = d.direction;
+                document.getElementById('st-txt').innerText = d.isGps ? "GPS Vivo" : "Manual";
+                document.getElementById('dot').className = 'status-dot' + (d.isGps ? ' active' : '');
             }
         });
 
-        // Enviar Reporte Manual
-        function sendStationReport() {
-            const idx = selectEst.value;
-            const dir = document.getElementById('select-direction').value;
+        function sendReport() {
+            var idx = sel.value;
+            var dir = document.getElementById('sel-dir').value;
             if (idx !== "") {
-                const st = stations[idx];
-                dbRef.set({
-                    lat: st.lat,
-                    lng: st.lng,
-                    locationName: `En estación ${st.name}`,
-                    direction: dir,
-                    isGps: false,
-                    updatedAt: Date.now()
-                });
+                var s = stList[idx];
+                db.set({ lat: s.lat, lng: s.lng, locationName: s.name, direction: dir, isGps: false });
             }
         }
 
-        // Transmisión GPS en Vivo
-        function toggleGpsTracking() {
-            const btn = document.getElementById('main-action-btn');
-            if (!isSharing) {
-                if ("geolocation" in navigator) {
-                    watchId = navigator.geolocation.watchPosition((pos) => {
-                        isSharing = true;
-                        const lat = pos.coords.latitude;
-                        const lng = pos.coords.longitude;
-                        const dir = document.getElementById('select-direction').value;
-
-                        dbRef.set({
-                            lat: lat,
-                            lng: lng,
-                            locationName: "GPS en vivo (A bordo)",
-                            direction: dir,
-                            isGps: true,
-                            updatedAt: Date.now()
-                        });
-
-                        btn.classList.add('active-sharing');
-                        btn.innerText = '🔴 Detener Transmisión GPS';
-                    }, (err) => {
-                        alert("Error al obtener señal GPS: " + err.message);
-                    }, { enableHighAccuracy: true });
+        function toggleGps() {
+            var btn = document.getElementById('btn-gps');
+            if (!isLive) {
+                if (navigator.geolocation) {
+                    watchId = navigator.geolocation.watchPosition(function(pos) {
+                        isLive = true;
+                        var dir = document.getElementById('sel-dir').value;
+                        db.set({ lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: "En trayecto (GPS)", direction: dir, isGps: true });
+                        btn.className = 'main-btn sharing';
+                        btn.innerText = '🔴 Detener GPS';
+                    }, function(err) { alert("GPS Error: " + err.message); }, { enableHighAccuracy: true });
                 }
             } else {
                 if (watchId) navigator.geolocation.clearWatch(watchId);
-                isSharing = false;
-                btn.classList.remove('active-sharing');
-                btn.innerText = 'Activar Rastreo GPS en Vivo';
+                isLive = false;
+                btn.className = 'main-btn';
+                btn.innerText = 'Activar GPS en Vivo';
             }
         }
 
-        function setMode(mode) {
-            document.getElementById('btn-mode-passenger').classList.toggle('active', mode === 'passenger');
-            document.getElementById('btn-mode-report').classList.toggle('active', mode === 'report');
-            document.getElementById('btn-mode-onboard').classList.toggle('active', mode === 'onboard');
-            document.getElementById('section-report').style.display = (mode === 'report') ? 'grid' : 'none';
-            document.getElementById('main-action-btn').style.display = (mode === 'onboard') ? 'block' : 'none';
+        function sm(m) {
+            document.getElementById('b1').className = 'btn' + (m==='passenger'?' active':'');
+            document.getElementById('b2').className = 'btn' + (m==='report'?' active':'');
+            document.getElementById('b3').className = 'btn' + (m==='onboard'?' active':'');
+            document.getElementById('sec-rep').style.display = (m==='report') ? 'grid' : 'none';
+            document.getElementById('btn-gps').style.display = (m==='onboard') ? 'block' : 'none';
         }
-            </script>
-            
+    </script>
+</body>
+</html>
