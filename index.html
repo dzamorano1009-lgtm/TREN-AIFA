@@ -147,7 +147,18 @@
 
         var userPos = null;
 
-        // 1. Estaciones ubicadas exactamente sobre el andén
+        // ==========================================
+// CÓDIGO COMPLETO DEFINITIVO - TREN SUBURBANO AIFA
+// ==========================================
+
+var map = L.map('map').setView([19.5392, -99.1901], 11);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// Estaciones oficiales exactas
 var stList = [
     { name: "Buenavista", lat: 19.4468, lng: -99.1531 },
     { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
@@ -163,57 +174,61 @@ var stList = [
     { name: "AIFA", lat: 19.7510, lng: -99.0180 }
 ];
 
-// 2. Trazo continuo obligatorio punto por punto (SIN SALTOS EN DIAGONAL)
+// Puntos de coordenadas detallados nodo por nodo sobre las vías reales
 var track = [
-    // --- BUENAVISTA A LECHERÍA ---
-    [19.4468, -99.1531], // Buenavista
-    [19.4580, -99.1542], 
-    [19.4715, -99.1590], // Curva Vallejo
-    [19.4893, -99.1714], // Fortuna
-    [19.5180, -99.1832], // Tenayuca
-    [19.5392, -99.1901], // Tlalnepantla
-    [19.5630, -99.1913], // San Rafael
-    [19.5775, -99.1885], // Curva Barrientos
-    [19.5910, -99.1838], // Lechería
-
-    // --- CURVA OBLIGATORIA EN LECHERÍA (EVITA LA DIAGONAL A COACALCO) ---
-    [19.5960, -99.1810], // Salida de patios Lechería
-    [19.6010, -99.1750], // Giro a la derecha hacia Recursos Hidráulicos
-    [19.6070, -99.1680], // Entrada a Av. Recursos Hidráulicos
-    
-    // --- TRAMO RECURSOS HIDRÁULICOS / TULTEPEC ---
-    [19.6136, -99.1604], // Cueyamil
-    [19.6200, -99.1500], 
-    [19.6256, -99.1430], // La Loma
-    [19.6330, -99.1300], 
-    [19.6415, -99.1170], // Teyahualco
-    [19.6520, -99.1000], 
-    [19.6640, -99.0880], // Prados Sur
-    [19.6800, -99.0730], 
-    [19.6950, -99.0665], // Nextlalpan
-    [19.7100, -99.0560], 
-    [19.7225, -99.0490], // Jaltocan
-    [19.7510, -99.0180]  // AIFA Terminal
+    [19.4468, -99.1531],
+    [19.4520, -99.1534],
+    [19.4580, -99.1542],
+    [19.4650, -99.1560],
+    [19.4715, -99.1590],
+    [19.4770, -99.1628],
+    [19.4830, -99.1672],
+    [19.4893, -99.1714],
+    [19.4960, -99.1748],
+    [19.5030, -99.1775],
+    [19.5110, -99.1808],
+    [19.5180, -99.1832],
+    [19.5280, -99.1865],
+    [19.5340, -99.1888],
+    [19.5392, -99.1901],
+    [19.5460, -99.1907],
+    [19.5540, -99.1911],
+    [19.5630, -99.1913],
+    [19.5700, -99.1905],
+    [19.5760, -99.1890],
+    [19.5830, -99.1865],
+    [19.5910, -99.1838],
+    [19.5940, -99.1822],
+    [19.5970, -99.1805],
+    [19.6000, -99.1778],
+    [19.6030, -99.1745],
+    [19.6060, -99.1708],
+    [19.6090, -99.1665],
+    [19.6136, -99.1604],
+    [19.6170, -99.1555],
+    [19.6210, -99.1498],
+    [19.6256, -99.1430],
+    [19.6295, -99.1365],
+    [19.6340, -99.1290],
+    [19.6380, -99.1225],
+    [19.6415, -99.1170],
+    [19.6470, -99.1080],
+    [19.6525, -99.0995],
+    [19.6580, -99.0935],
+    [19.6640, -99.0880],
+    [19.6710, -99.0815],
+    [19.6780, -99.0750],
+    [19.6860, -99.0700],
+    [19.6950, -99.0665],
+    [19.7040, -99.0600],
+    [19.7130, -99.0535],
+    [19.7225, -99.0490],
+    [19.7320, -99.0395],
+    [19.7410, -99.0290],
+    [19.7510, -99.0180]
 ];
 
-// 3. Dibujado de la Polyline con trazo grueso neón y sombra
-var sombra = L.polyline(track, {
-    color: '#052e16',
-    weight: 9,
-    opacity: 0.6,
-    lineCap: 'round',
-    lineJoin: 'round'
-}).addTo(map);
-
-var lineaVerde = L.polyline(track, {
-    color: '#22c55e',
-    weight: 5,
-    opacity: 1,
-    lineCap: 'round',
-    lineJoin: 'round'
-}).addTo(map);
         
-
         var map = L.map('map', { zoomControl: false }).setView([19.6000, -99.1400], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
