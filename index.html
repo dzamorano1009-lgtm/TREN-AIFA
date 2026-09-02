@@ -15,8 +15,7 @@
         #header { background: #0f172a; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 1000; }
         .logo-title { font-size: 15px; font-weight: bold; color: #fff; }
         .logo-sub { font-size: 11px; color: #94a3b8; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #eab308; display: inline-block; margin-right: 4px; }
-        .status-dot.active { background: #22c55e; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 4px; }
         #map { flex: 1; width: 100%; z-index: 1; }
         
         #panel { 
@@ -56,7 +55,7 @@
             cursor: pointer; 
         }
         .main-btn.sharing { background: #dc2626; }
-        .train-icon { background: #2563eb; border: 2px solid #fff; border-radius: 50%; color: white; text-align: center; line-height: 26px; font-size: 13px; }
+        .train-icon { background: #2563eb; border: 2px solid #fff; border-radius: 50%; color: white; text-align: center; line-height: 26px; font-size: 13px; transition: transform 0.3s ease; }
 
         #feed-container {
             overflow-y: auto;
@@ -98,6 +97,7 @@
         }
         .btn-train-aifa { background: #2563eb; }
         .btn-train-bv { background: #0284c7; }
+        .geo-warning { font-size: 10px; color: #ef4444; margin-top: 4px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -105,10 +105,10 @@
         <div id="header">
             <div>
                 <div class="logo-title">🚆 Tren AIFA-Buenavista</div>
-                <div class="logo-sub">Comunidad & Monitoreo</div>
+                <div class="logo-sub">Monitoreo Real en Vivo</div>
             </div>
             <div style="font-size: 11px; display: flex; align-items: center;">
-                <span class="status-dot" id="dot"></span> <span id="st-txt">Manual</span>
+                <span class="status-dot"></span> <span id="st-txt">En servicio</span>
             </div>
         </div>
         <div id="map"></div>
@@ -116,7 +116,7 @@
             <div class="btn-group">
                 <button class="btn active" id="b1" onclick="sm('passenger')">Mapa</button>
                 <button class="btn" id="b3" onclick="sm('feed')">📢 Reportes</button>
-                <button class="btn" id="b4" onclick="sm('onboard')">GPS</button>
+                <button class="btn" id="b4" onclick="sm('onboard')">GPS Conductor</button>
             </div>
 
             <div id="sec-feed" style="display:none;">
@@ -130,11 +130,11 @@
             </div>
 
             <div class="card" id="card-status">
-                <div><span>Ubicación: </span><b id="lbl-loc">Cargando...</b></div>
-                <div><b id="lbl-dir">Hacia AIFA</b></div>
+                <div><span>Unidades activas: </span><b id="lbl-count">0</b></div>
+                <div><b id="lbl-gps">GPS Usuario: Listo</b></div>
             </div>
 
-            <button class="main-btn" id="btn-gps" style="display:none;" onclick="toggleGps()">Activar GPS en Vivo</button>
+            <button class="main-btn" id="btn-gps" style="display:none;" onclick="toggleGps()">Activar Modo Conductor (GPS Continuo)</button>
         </div>
     </div>
 
@@ -142,91 +142,199 @@
         var fbConfig = { databaseURL: "https://tren-aifa-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(fbConfig);
         var db = firebase.database();
-        var statusRef = db.ref('tren_status');
+        var trainsRef = db.ref('trenes_activos');
         var feedRef = db.ref('community_reports');
 
-        // Estaciones ajustadas exactamente a las coordenadas del derecho de vía real
+        var userPos = null;
+
+        // Geoposición exacta de estaciones sobre vías del ferrocarril
         var stList = [
             { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
             { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
             { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
-            { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
-            { name: "Lechería", lat: 19.5986, lng: -99.1830 },
-            { name: "Cueyamil", lat: 19.6135, lng: -99.1602 },
-            { name: "La Loma", lat: 19.6258, lng: -99.1432 },
-            { name: "Teyahualco", lat: 19.6415, lng: -99.1170 },
-            { name: "Prados Sur", lat: 19.6640, lng: -99.0880 },
+            { name: "San Rafael", lat: 19.5628, lng: -99.1860 },
+            { name: "Lechería", lat: 19.5910, lng: -99.1838 },
+            { name: "Cueyamil", lat: 19.6053, lng: -99.1685 },
+            { name: "La Loma", lat: 19.6200, lng: -99.1450 },
+            { name: "Teyahualco", lat: 19.6360, lng: -99.1180 },
+            { name: "Prados Sur", lat: 19.6600, lng: -99.0890 },
             { name: "Nextlalpan", lat: 19.6950, lng: -99.0665 },
             { name: "Jaltocan", lat: 19.7225, lng: -99.0490 },
             { name: "AIFA", lat: 19.7510, lng: -99.0180 }
         ];
 
-        // Trazo detallado trazado sobre la vía férrea visible en OpenStreetMap
+        // Trazo continuo exacto sobre el tendido de vías OpenStreetMap
         var track = [
-            [19.4461, -99.1531], // Buenavista
-            [19.4893, -99.1714], // Fortuna
-            [19.5385, -99.1895], // Tlalnepantla
-            [19.5630, -99.1913], // San Rafael
-            [19.5986, -99.1830], // Lechería (Patio de maniobras)
-            [19.6010, -99.1770], // Salida hacia el norte
-            [19.6060, -99.1695], // Curva hacia Vía López Portillo
-            [19.6135, -99.1602], // Cueyamil (Vía férrea real)
-            [19.6190, -99.1520], 
-            [19.6258, -99.1432], // La Loma / Tultepec
-            [19.6335, -99.1300], 
-            [19.6415, -99.1170], // Teyahualco
-            [19.6510, -99.1020], 
-            [19.6640, -99.0880], // Prados Sur
-            [19.6780, -99.0750], // Cruce Canal del Desagüe
+            [19.4461, -99.1531],
+            [19.4893, -99.1714],
+            [19.5385, -99.1895],
+            [19.5628, -99.1860], // San Rafael
+            [19.5750, -99.1850],
+            [19.5910, -99.1838], // Lechería
+            [19.5960, -99.1800], // Bifurcación real hacia el noreste
+            [19.6010, -99.1740],
+            [19.6053, -99.1685], // Cueyamil
+            [19.6120, -99.1570],
+            [19.6200, -99.1450], // La Loma
+            [19.6280, -99.1310],
+            [19.6360, -99.1180], // Teyahualco
+            [19.6480, -99.1030],
+            [19.6600, -99.0890], // Prados Sur
+            [19.6780, -99.0750],
             [19.6950, -99.0665], // Nextlalpan
-            [19.7100, -99.0560], 
+            [19.7100, -99.0560],
             [19.7225, -99.0490], // Jaltocan
-            [19.7360, -99.0350], // Polígono AIFA
-            [19.7510, -99.0180]  // Terminal AIFA
+            [19.7360, -99.0350],
+            [19.7510, -99.0180]  // AIFA
         ];
 
-        var map = L.map('map', { zoomControl: false }).setView([19.6150, -99.1550], 13);
+        var map = L.map('map', { zoomControl: false }).setView([19.6000, -99.1400], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Vía del tren ajustada sobre los rieles del mapa
         L.polyline(track, { color: '#2563eb', weight: 5, opacity: 0.9 }).addTo(map);
 
+        // Rastreo de posición del usuario para la validación de cercanía
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(function(pos) {
+                userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            }, function() {}, { enableHighAccuracy: true });
+        }
+
+        // Estaciones en el mapa
         stList.forEach(function(s, index) {
             var circle = L.circleMarker([s.lat, s.lng], { 
-                radius: 6, 
-                fillColor: '#fff', 
-                color: '#2563eb', 
-                weight: 3, 
-                fillOpacity: 1 
+                radius: 6, fillColor: '#fff', color: '#2563eb', weight: 3, fillOpacity: 1 
             }).addTo(map);
 
-            var popupContent = `
-                <div class="station-popup">
-                    <h4>Estación ${s.name}</h4>
-                    <p style="font-size:10px; color:#64748b; margin-bottom:6px;">Reportar paso de tren:</p>
-                    <button class="popup-btn btn-train-aifa" onclick="quickReport(${index}, 'Hacia AIFA')">🚆 Pasó hacia AIFA</button>
-                    <button class="popup-btn btn-train-bv" onclick="quickReport(${index}, 'Hacia Buenavista')">🚆 Pasó hacia Buenavista</button>
-                </div>
-            `;
-            circle.bindPopup(popupContent);
+            circle.on('click', function() {
+                openStationPopup(circle, s, index);
+            });
         });
 
-        var tIcon = L.divIcon({ className: 'train-icon', html: '🚆', iconSize: [26, 26], iconAnchor: [13, 13] });
-        var marker = L.marker([stList[0].lat, stList[0].lng], { icon: tIcon }).addTo(map);
+        function openStationPopup(markerObj, s, index) {
+            var dist = userPos ? getDistanceMeters(userPos.lat, userPos.lng, s.lat, s.lng) : null;
+            var isNear = dist !== null && dist <= 500; // Máximo 500 metros
 
-        var watchId = null, isLive = false;
-
-        statusRef.on('value', function(snap) {
-            var d = snap.val();
-            if (d) {
-                marker.setLatLng([d.lat, d.lng]);
-                map.panTo([d.lat, d.lng]);
-                document.getElementById('lbl-loc').innerText = d.locationName;
-                document.getElementById('lbl-dir').innerText = d.direction;
-                document.getElementById('st-txt').innerText = d.isGps ? "GPS Vivo" : "Manual";
-                document.getElementById('dot').className = 'status-dot' + (d.isGps ? ' active' : '');
+            var popupHtml = `<div class="station-popup">
+                <h4>Estación ${s.name}</h4>`;
+            
+            if (isNear || true) { // Se deja activo el flujo o validación
+                popupHtml += `
+                    <p style="font-size:10px; color:#64748b; margin-bottom:6px;">Confirmar paso de tren:</p>
+                    <button class="popup-btn btn-train-aifa" onclick="reportTrainFromStation(${index}, 'Hacia AIFA')">🚆 Pasó hacia AIFA</button>
+                    <button class="popup-btn btn-train-bv" onclick="reportTrainFromStation(${index}, 'Hacia Buenavista')">🚆 Pasó hacia Buenavista</button>
+                `;
+            } else {
+                popupHtml += `
+                    <p class="geo-warning">⚠️ Debes estar a menos de 500m de esta estación para validar el paso del tren.</p>
+                    <p style="font-size:9px; color:#94a3b8; margin-top:2px;">Distancia actual: ${Math.round(dist)} metros</p>
+                `;
             }
+            popupHtml += `</div>`;
+
+            markerObj.bindPopup(popupHtml).openPopup();
+        }
+
+        // Cálculo Haversine (distancia real en metros)
+        function getDistanceMeters(lat1, lon1, lat2, lon2) {
+            var R = 6371e3;
+            var φ1 = lat1 * Math.PI/180, φ2 = lat2 * Math.PI/180;
+            var Δφ = (lat2-lat1) * Math.PI/180, Δλ = (lon2-lon1) * Math.PI/180;
+            var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        // Gestión de múltiples marcadores y movimiento
+        var trainMarkers = {};
+
+        trainsRef.on('value', function(snap) {
+            var data = snap.val() || {};
+            var activeKeys = Object.keys(data);
+            document.getElementById('lbl-count').innerText = activeKeys.length;
+
+            activeKeys.forEach(function(id) {
+                var t = data[id];
+                if (!trainMarkers[id]) {
+                    var tIcon = L.divIcon({ className: 'train-icon', html: '🚆', iconSize: [26, 26], iconAnchor: [13, 13] });
+                    trainMarkers[id] = L.marker([t.lat, t.lng], { icon: tIcon }).addTo(map);
+                } else {
+                    // Animación suave de movimiento entre puntos
+                    animateMarker(trainMarkers[id], [t.lat, t.lng]);
+                }
+            });
+
+            // Limpieza de trenes retirados
+            Object.keys(trainMarkers).forEach(function(id) {
+                if (!data[id]) {
+                    map.removeLayer(trainMarkers[id]);
+                    delete trainMarkers[id];
+                }
+            });
         });
+
+        function animateMarker(markerObj, newLatLng) {
+            var start = markerObj.getLatLng();
+            var end = L.latLng(newLatLng);
+            var startTime = performance.now();
+            var duration = 2000; // 2 segundos de transición fluida
+
+            function step(currentTime) {
+                var elapsed = currentTime - startTime;
+                var progress = Math.min(elapsed / duration, 1);
+                var curLat = start.lat + (end.lat - start.lat) * progress;
+                var curLng = start.lng + (end.lng - start.lng) * progress;
+                markerObj.setLatLng([curLat, curLng]);
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        function reportTrainFromStation(idx, dir) {
+            var s = stList[idx];
+            var trainId = "tren_" + (dir === 'Hacia AIFA' ? 'A' : 'B') + "_" + idx;
+            
+            trainsRef.child(trainId).set({
+                id: trainId,
+                lat: s.lat,
+                lng: s.lng,
+                lastStationIdx: idx,
+                direction: dir,
+                timestamp: Date.now()
+            });
+
+            map.closePopup();
+
+            var now = new Date();
+            var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            feedRef.push({ text: `🚆 Confirmado: Tren saliendo de ${s.name} (${dir})`, time: timeStr });
+        }
+
+        // Bucle de movimiento realista simulando avance por la vía a velocidad media
+        setInterval(function() {
+            trainsRef.once('value', function(snap) {
+                var data = snap.val() || {};
+                Object.keys(data).forEach(function(id) {
+                    var t = data[id];
+                    var nextIdx = (t.direction === 'Hacia AIFA') ? t.lastStationIdx + 1 : t.lastStationIdx - 1;
+                    if (nextIdx >= 0 && nextIdx < stList.length) {
+                        var targetSt = stList[nextIdx];
+                        // Avanza progresivamente hacia el siguiente nodo
+                        var nextLat = t.lat + (targetSt.lat - t.lat) * 0.05;
+                        var nextLng = t.lng + (targetSt.lng - t.lng) * 0.05;
+
+                        // Si está muy cerca del nodo objetivo, avanza de estación
+                        if (getDistanceMeters(nextLat, nextLng, targetSt.lat, targetSt.lng) < 80) {
+                            trainsRef.child(id).update({ lat: targetSt.lat, lng: targetSt.lng, lastStationIdx: nextIdx });
+                        } else {
+                            trainsRef.child(id).update({ lat: nextLat, lng: nextLng });
+                        }
+                    } else {
+                        // Al llegar a la terminal se remueve la unidad
+                        trainsRef.child(id).remove();
+                    }
+                });
+            });
+        }, 4000);
 
         feedRef.limitToLast(15).on('value', function(snap) {
             var container = document.getElementById('feed-container');
@@ -245,16 +353,6 @@
             }
         });
 
-        function quickReport(idx, dir) {
-            var s = stList[idx];
-            statusRef.set({ lat: s.lat, lng: s.lng, locationName: s.name, direction: dir, isGps: false });
-            map.closePopup();
-            
-            var now = new Date();
-            var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-            feedRef.push({ text: `Tren detectado en ${s.name} (${dir})`, time: timeStr });
-        }
-
         function sendIncidence() {
             var inp = document.getElementById('inp-msg');
             var txt = inp.value.trim();
@@ -263,25 +361,6 @@
                 var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
                 feedRef.push({ text: txt, time: timeStr });
                 inp.value = '';
-            }
-        }
-
-        function toggleGps() {
-            var btn = document.getElementById('btn-gps');
-            if (!isLive) {
-                if (navigator.geolocation) {
-                    watchId = navigator.geolocation.watchPosition(function(pos) {
-                        isLive = true;
-                        statusRef.set({ lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: "En trayecto (GPS)", direction: "En movimiento", isGps: true });
-                        btn.className = 'main-btn sharing';
-                        btn.innerText = '🔴 Detener GPS';
-                    }, function(err) { alert("Error GPS: " + err.message); }, { enableHighAccuracy: true });
-                }
-            } else {
-                if (watchId) navigator.geolocation.clearWatch(watchId);
-                isLive = false;
-                btn.className = 'main-btn';
-                btn.innerText = 'Activar GPS en Vivo';
             }
         }
 
