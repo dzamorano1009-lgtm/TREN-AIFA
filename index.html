@@ -145,38 +145,218 @@
 
         var userPos = null;
 
-        // Estaciones oficiales exactas de la ruta completa
-        var stList = [
-            { name: "Buenavista", lat: 19.4468, lng: -99.1531 },
-            { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
-            { name: "Tlalnepantla", lat: 19.5392, lng: -99.1901 },
-            { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
-            { name: "Lechería", lat: 19.5910, lng: -99.1838 },
-            { name: "Cueyamil", lat: 19.6136, lng: -99.1604 },
-            { name: "La Loma", lat: 19.6256, lng: -99.1430 },
-            { name: "Teyahualco", lat: 19.6415, lng: -99.1170 },
-            { name: "Prados Sur", lat: 19.6640, lng: -99.0880 },
-            { name: "Nextlalpan", lat: 19.6950, lng: -99.0665 },
-            { name: "Jaltocan", lat: 19.7225, lng: -99.0490 },
-            { name: "AIFA", lat: 19.7510, lng: -99.0180 }
-        ];
+        {
+   "results" : 
+   [
+      {
+         "address_components" : 
+         [
+            {
+               "long_name" : "Buenavista",
+               "short_name" : "Buenavista",
+               "types" : 
+               [
+                  "establishment",
+                  "point_of_interest",
+                  "subway_station",
+                  "transit_station"
+               ]
+            },
+            {
+               "long_name" : "Buenavista",
+               "short_name" : "Buenavista",
+               "types" : 
+               [
+                  "political",
+                  "sublocality",
+                  "sublocality_level_1"
+               ]
+            },
+            {
+               "long_name" : "Ciudad de México",
+               "short_name" : "México D.F.",
+               "types" : 
+               [
+                  "locality",
+                  "political"
+               ]
+            },
+            {
+               "long_name" : "Ciudad de México",
+               "short_name" : "CDMX",
+               "types" : 
+               [
+                  "administrative_area_level_1",
+                  "political"
+               ]
+            },
+            {
+               "long_name" : "Mexico",
+               "short_name" : "MX",
+               "types" : 
+               [
+                  "country",
+                  "political"
+               ]
+            },
+            {
+               "long_name" : "06350",
+               "short_name" : "06350",
+               "types" : 
+               [
+                  "postal_code"
+               ]
+            }
+         ],
+         "formatted_address" : "Buenavista, Buenavista, 06350 Ciudad de México, CDMX, Mexico",
+         "geometry" : 
+         {
+            "location" : 
+            {
+               "lat" : 19.44992,
+               "lng" : -99.15161999999999
+            },
+            "location_type" : "GEOMETRIC_CENTER",
+            "viewport" : 
+            {
+               "northeast" : 
+               {
+                  "lat" : 19.4499778,
+                  "lng" : -99.15045436970848
+               },
+               "southwest" : 
+               {
+                  "lat" : 19.4463397,
+                  "lng" : -99.15315233029149
+               }
+            }
+         },
+         "place_id" : "ChIJjUKlSNr40YUReWGDHYkbqKY",
+         "plus_code" : 
+         {
+            "compound_code" : "CRXX+X9 Mexico City, CDMX, Mexico",
+            "global_code" : "76F2CRXX+X9"
+         },
+         "types" : 
+         [
+            "establishment",
+            "point_of_interest",
+            "subway_station",
+            "transit_station"
+         ]
+      }
+   ],
+   "status" : "OK"
+        }
 
-        // Trazo exacto sobre las vías reales (con la curva hacia el AIFA)
-        var track = [
-            [19.4468, -99.1531], [19.4520, -99.1534], [19.4580, -99.1542], [19.4650, -99.1560],
-            [19.4715, -99.1590], [19.4770, -99.1628], [19.4830, -99.1672], [19.4893, -99.1714],
-            [19.4960, -99.1748], [19.5030, -99.1775], [19.5110, -99.1808], [19.5180, -99.1832],
-            [19.5280, -99.1865], [19.5340, -99.1888], [19.5392, -99.1901], [19.5460, -99.1907],
-            [19.5540, -99.1911], [19.5630, -99.1913], [19.5700, -99.1905], [19.5760, -99.1890],
-            [19.5830, -99.1865], [19.5910, -99.1838], [19.5940, -99.1822], [19.5970, -99.1805],
-            [19.6000, -99.1778], [19.6030, -99.1745], [19.6060, -99.1708], [19.6090, -99.1665],
-            [19.6136, -99.1604], [19.6170, -99.1555], [19.6210, -99.1498], [19.6256, -99.1430],
-            [19.6295, -99.1365], [19.6340, -99.1290], [19.6380, -99.1225], [19.6415, -99.1170],
-            [19.6470, -99.1080], [19.6525, -99.0995], [19.6580, -99.0935], [19.6640, -99.0880],
-            [19.6710, -99.0815], [19.6780, -99.0750], [19.6860, -99.0700], [19.6950, -99.0665],
-            [19.7040, -99.0600], [19.7130, -99.0535], [19.7225, -99.0490], [19.7320, -99.0395],
-            [19.7410, -99.0290], [19.7510, -99.0180]
-        ];
+        === Estación Fortuna Tren Suburbano, Ciudad de México, México ===
+         "formatted_address" : "U.H. Maravillas Ceylan, Azcapotzalco, 02520 Tlalnepantla, CDMX, Mexico",
+               "lat" : 19.4922068,
+               "lng" : -99.17129540000001
+                  "lat" : 19.4934966302915,
+                  "lng" : -99.1701198197085
+                  "lat" : 19.4907986697085,
+                  "lng" : -99.17281778029152
+   "status" : "OK"
+=== Estación Tlalnepantla Tren Suburbano, Estado de México, México ===
+         "formatted_address" : "Manzana 001, Tlalnepantla Centro, 54030 Tlalnepantla, Méx., Mexico",
+               "lat" : 19.5365674,
+               "lng" : -99.18400869999999
+                  "lat" : 19.5379493802915,
+                  "lng" : -99.18251916970851
+                  "lat" : 19.5352514197085,
+                  "lng" : -99.18521713029152
+   "status" : "OK"
+=== Estación San Rafael Tren Suburbano, Estado de México, México ===
+         "formatted_address" : "San Rafael, Prolongacion Av. Hidalgo S/N, Tlayapa, 54110 Tlalnepantla, Méx., Mexico",
+               "lat" : 19.56526,
+               "lng" : -99.19495999999999
+                  "lat" : 19.5668355802915,
+                  "lng" : -99.19333176970849
+                  "lat" : 19.5641376197085,
+                  "lng" : -99.19602973029151
+   "status" : "OK"
+=== Estación Lechería Tren Suburbano, Estado de México, México ===
+         "formatted_address" : "Av. del Parque 3, La Quebrada, 54769 Cuautitlán Izcalli, Méx., Mexico",
+               "lat" : 19.5986873,
+               "lng" : -99.1872438
+                  "lat" : 19.5999266302915,
+                  "lng" : -99.18594511970849
+                  "lat" : 19.5972286697085,
+                  "lng" : -99.1886430802915
+   "status" : "OK"
+=== Estación Cueyamil Tren Suburbano, Estado de México, México ===
+         "formatted_address" : "Cueyamil, Col. Lázaro Cárdenas, Méx., Mexico",
+                  "lat" : 19.6380468,
+                  "lng" : -99.15719419999999
+                  "lat" : 19.6299791,
+                  "lng" : -99.16618179999999
+               "lat" : 19.6337537,
+               "lng" : -99.16360510000001
+                  "lat" : 19.6380468,
+                  "lng" : -99.15719419999999
+                  "lat" : 19.6299791,
+                  "lng" : -99.16618179999999
+   "status" : "OK"
+=== Estación La Loma Tren Suburbano, Tultitlán, Estado de México, México ===
+         "formatted_address" : "54910 Tultitlán de Mariano Escobedo, State of Mexico, Mexico",
+               "lat" : 19.6434667,
+               "lng" : -99.149473
+                  "lat" : 19.6447687802915,
+                  "lng" : -99.14807816970851
+                  "lat" : 19.64207081970849,
+                  "lng" : -99.15077613029152
+   "status" : "OK"
+=== Estación Teyahualco Tren Suburbano, Estado de México, México ===
+         "formatted_address" : "C. 10 de Junio, 54980 Santiago Teyahualco, Méx., Mexico",
+               "lat" : 19.6552912,
+               "lng" : -99.1358889
+                  "lat" : 19.6565980302915,
+                  "lng" : -99.13449816970849
+                  "lat" : 19.6539000697085,
+                  "lng" : -99.13719613029151
+   "status" : "OK"
+=== Estación Prados Sur Tren Suburbano, Estado de México, México ===
+         "formatted_address" : "State of Mexico, Mexico",
+                  "lat" : 20.2858665,
+                  "lng" : -98.5968666
+                  "lat" : 18.366943,
+                  "lng" : -100.6130911
+               "lat" : 19.4968732,
+               "lng" : -99.72326729999999
+                  "lat" : 20.2858665,
+                  "lng" : -98.5968666
+                  "lat" : 18.366943,
+                  "lng" : -100.6130911
+   "status" : "OK"
+=== Estación Cajiga Tren Suburbano, Estado de México, México ===
+         "formatted_address" : "MWW6+87, 54972 La Rinconada, Méx., Mexico",
+               "lat" : 19.698159,
+               "lng" : -99.08663249999999
+                  "lat" : 19.6994581802915,
+                  "lng" : -99.08523516970848
+                  "lat" : 19.6967602197085,
+                  "lng" : -99.0879331302915
+   "status" : "OK"
+=== Estación Xaltocan Tren Suburbano, Estado de México, México ===
+         "formatted_address" : "FFCC Central 4380, 55790 Méx., Mexico",
+               "lat" : 19.7233158,
+               "lng" : -99.05774269999999
+                  "lat" : 19.7246038302915,
+                  "lng" : -99.0563338697085
+                  "lat" : 19.7219058697085,
+                  "lng" : -99.0590318302915
+   "status" : "OK"
+=== Terminal Ferroviaria AIFA, Zumpango, Estado de México, México ===
+         "formatted_address" : "Felipe Ángeles International Airport, Circuito Exterior Mexiquense km 33 Santa Lucia, 55600 Zumpango de Ocampo, Méx., Mexico",
+               "lat" : 19.7352993,
+               "lng" : -99.02652019999999
+                  "lat" : 19.747936,
+                  "lng" : -98.98039299999999
+                  "lat" : 19.7348772,
+                  "lng" : -99.02676339999999
+   "status" : "OK"
+        
 
         var map = L.map('map', { zoomControl: false }).setView([19.6000, -99.1400], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
