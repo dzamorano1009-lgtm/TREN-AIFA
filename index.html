@@ -147,7 +147,7 @@
 
         var userPos = null;
 
-        // 1. Estaciones con ubicación exacta sobre los andenes y vías principales
+        // 1. Ubicación exacta de las estaciones sobre el andén/vía
 var stList = [
     { name: "Buenavista", lat: 19.4468, lng: -99.1531 },
     { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
@@ -163,60 +163,69 @@ var stList = [
     { name: "AIFA", lat: 19.7510, lng: -99.0180 }
 ];
 
-// 2. Trazo detallado nodo por nodo (siguiendo la infraestructura de rieles real)
+// 2. Trazo curva por curva siguiendo el derecho de vía de OpenStreetMap
 var track = [
-    // --- TRAMO BUENAVISTA A TLALNEPANTLA ---
+    // --- BUENAVISTA A TLALNEPANTLA ---
     [19.4468, -99.1531], // Terminal Buenavista
-    [19.4510, -99.1533], // Salida de andenes
-    [19.4570, -99.1540], // Curva Tlatelolco
-    [19.4635, -99.1555], // Cruzamiento Flores Magón
-    [19.4700, -99.1582], // Paralelo a Calz. Vallejo
-    [19.4760, -99.1620], // Curva Cuitláhuac
-    [19.4825, -99.1668], // Aproximación a Ferrería
-    [19.4893, -99.1714], // Estación Fortuna
-    [19.4950, -99.1742], // Tramo Azcapotzalco
-    [19.5020, -99.1770], // Patios de maniobra
-    [19.5100, -99.1802], // Paso por Calz. Las Armas
-    [19.5180, -99.1832], // Límite CDMX / EdoMex (Tenayuca)
-    [19.5280, -99.1865], // Cruce Av. Mario Colín
-    [19.5350, -99.1890], // Entrada a Tlalnepantla
-    [19.5392, -99.1901], // Estación Tlalnepantla
+    [19.4520, -99.1534], 
+    [19.4580, -99.1542], 
+    [19.4650, -99.1560], 
+    [19.4715, -99.1590], // Paralelo a Calzada Vallejo
+    [19.4770, -99.1628], 
+    [19.4830, -99.1672], 
+    [19.4893, -99.1714], // Fortuna (Ferrería)
+    [19.4960, -99.1748], 
+    [19.5030, -99.1775], 
+    [19.5110, -99.1808], 
+    [19.5180, -99.1832], // Tenayuca (Límite CDMX/EdoMex)
+    [19.5280, -99.1865], 
+    [19.5340, -99.1888], 
+    [19.5392, -99.1901], // Tlalnepantla
 
-    // --- TRAMO TLALNEPANTLA A LECHERÍA ---
-    [19.5470, -99.1908], // Salida norte Tlalnepantla
-    [19.5550, -99.1912], // Paralelo a la vía México-Laredo
-    [19.5630, -99.1913], // Estación San Rafael
-    [19.5700, -99.1905], // Curva de Barrientos
-    [19.5775, -99.1885], // Tramo industrial Tultitlán
-    [19.5840, -99.1860], // Aproximación a Lechería
-    [19.5910, -99.1838], // Estación Lechería
+    // --- TLALNEPANTLA A LECHERÍA ---
+    [19.5460, -99.1907], 
+    [19.5540, -99.1911], 
+    [19.5630, -99.1913], // San Rafael
+    [19.5700, -99.1905], // Curva Barrientos
+    [19.5760, -99.1890], 
+    [19.5830, -99.1865], 
+    [19.5910, -99.1838], // Lechería
 
-    // --- BIFURCACIÓN Y RAMAL AIFA (Av. Recursos Hidráulicos) ---
-    [19.5945, -99.1820], // Salida de patios Lechería
-    [19.5985, -99.1795], // Inicio del viaducto elevado / curva este
-    [19.6025, -99.1760], // Incorporación a Av. Recursos Hidráulicos
-    [19.6075, -99.1700], // Tramo lineal Tultitlán
-    [19.6136, -99.1604], // Estación Cueyamil (Cruce Vía López Portillo)
-    [19.6185, -99.1530], // Tramo hacia el distribuidor vial
-    [19.6220, -99.1480], // Inicio de curva del trébol
-    [19.6256, -99.1430], // Estación La Loma
-    [19.6300, -99.1360], // Salida de La Loma hacia Tultepec
+    // --- BIFURCACIÓN RAMAL AIFA (Salida de Lechería hacia Av. Recursos Hidráulicos) ---
+    [19.5940, -99.1822], 
+    [19.5970, -99.1805], // Curva hacia el oriente (evita cortar por San Mateo)
+    [19.6000, -99.1778], 
+    [19.6030, -99.1745], 
+    [19.6060, -99.1708], 
+    [19.6090, -99.1665], 
+    [19.6136, -99.1604], // Cueyamil (Cruza Vía José López Portillo)
 
-    // --- TRAMO TULTEPEC A AIFA ---
-    [19.6355, -99.1270], // Entrada al municipio de Tultepec
-    [19.6415, -99.1170], // Estación Teyahualco
-    [19.6480, -99.1060], // Zona abierta / campos de Tultepec
-    [19.6560, -99.0960], // Aproximación a Nextlalpan
-    [19.6640, -99.0880], // Estación Prados Sur
-    [19.6780, -99.0750], // Tramo paralelo al viaducto Nextlalpan
-    [19.6950, -99.0665], // Estación Nextlalpan
-    [19.7100, -99.0560], // Cruce de la Autopista Mexiquense
-    [19.7225, -99.0490], // Estación Jaltocan
-    [19.7360, -99.0350], // Límite del Polígono Militar (Base Aérea)
-    [19.7440, -99.0260], // Descenso a túnel subterráneo
-    [19.7510, -99.0180]  // Terminal Subterránea AIFA
+    // --- TRAMO TULTEPEC (Paralelo a Av. Recursos Hidráulicos) ---
+    [19.6170, -99.1555], 
+    [19.6210, -99.1498], 
+    [19.6256, -99.1430], // La Loma
+    [19.6295, -99.1365], 
+    [19.6340, -99.1290], 
+    [19.6380, -99.1225], 
+    [19.6415, -99.1170], // Teyahualco
+    [19.6470, -99.1080], 
+    [19.6525, -99.0995], 
+    [19.6580, -99.0935], 
+    [19.6640, -99.0880], // Prados Sur
+
+    // --- TRAMO NEXTLALPAN A AIFA ---
+    [19.6710, -99.0815], 
+    [19.6780, -99.0750], 
+    [19.6860, -99.0700], 
+    [19.6950, -99.0665], // Nextlalpan
+    [19.7040, -99.0600], 
+    [19.7130, -99.0535], 
+    [19.7225, -99.0490], // Jaltocan
+    [19.7320, -99.0395], 
+    [19.7410, -99.0290], 
+    [19.7510, -99.0180]  // Terminal AIFA
 ];
-        
+    
         
 
         var map = L.map('map', { zoomControl: false }).setView([19.6000, -99.1400], 11);
