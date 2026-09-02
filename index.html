@@ -147,46 +147,47 @@
 
         var userPos = null;
 
-        // Geoposición exacta de estaciones sobre vías del ferrocarril
-        var stList = [
-            { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
-            { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
-            { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
-            { name: "San Rafael", lat: 19.5628, lng: -99.1860 },
-            { name: "Lechería", lat: 19.5910, lng: -99.1838 },
-            { name: "Cueyamil", lat: 19.6053, lng: -99.1685 },
-            { name: "La Loma", lat: 19.6200, lng: -99.1450 },
-            { name: "Teyahualco", lat: 19.6360, lng: -99.1180 },
-            { name: "Prados Sur", lat: 19.6600, lng: -99.0890 },
-            { name: "Nextlalpan", lat: 19.6950, lng: -99.0665 },
-            { name: "Jaltocan", lat: 19.7225, lng: -99.0490 },
-            { name: "AIFA", lat: 19.7510, lng: -99.0180 }
-        ];
+        // Estaciones fijadas sobre el tendido férreo real
+var stList = [
+    { name: "Buenavista", lat: 19.4461, lng: -99.1531 },
+    { name: "Fortuna", lat: 19.4893, lng: -99.1714 },
+    { name: "Tlalnepantla", lat: 19.5385, lng: -99.1895 },
+    { name: "San Rafael", lat: 19.5630, lng: -99.1913 },
+    { name: "Lechería", lat: 19.5910, lng: -99.1838 },
+    { name: "Cueyamil", lat: 19.6136, lng: -99.1604 },
+    { name: "La Loma", lat: 19.6256, lng: -99.1430 },
+    { name: "Teyahualco", lat: 19.6415, lng: -99.1170 },
+    { name: "Prados Sur", lat: 19.6640, lng: -99.0880 },
+    { name: "Nextlalpan", lat: 19.6950, lng: -99.0665 },
+    { name: "Jaltocan", lat: 19.7225, lng: -99.0490 },
+    { name: "AIFA", lat: 19.7510, lng: -99.0180 }
+];
 
-        // Trazo continuo exacto sobre el tendido de vías OpenStreetMap
-        var track = [
-            [19.4461, -99.1531],
-            [19.4893, -99.1714],
-            [19.5385, -99.1895],
-            [19.5628, -99.1860], // San Rafael
-            [19.5750, -99.1850],
-            [19.5910, -99.1838], // Lechería
-            [19.5960, -99.1800], // Bifurcación real hacia el noreste
-            [19.6010, -99.1740],
-            [19.6053, -99.1685], // Cueyamil
-            [19.6120, -99.1570],
-            [19.6200, -99.1450], // La Loma
-            [19.6280, -99.1310],
-            [19.6360, -99.1180], // Teyahualco
-            [19.6480, -99.1030],
-            [19.6600, -99.0890], // Prados Sur
-            [19.6780, -99.0750],
-            [19.6950, -99.0665], // Nextlalpan
-            [19.7100, -99.0560],
-            [19.7225, -99.0490], // Jaltocan
-            [19.7360, -99.0350],
-            [19.7510, -99.0180]  // AIFA
-        ];
+// Trazo fino curva a curva (sigue el canal y la Av. Recursos Hidráulicos)
+var track = [
+    [19.4461, -99.1531], // Buenavista
+    [19.4893, -99.1714], // Fortuna
+    [19.5385, -99.1895], // Tlalnepantla
+    [19.5630, -99.1913], // San Rafael
+    [19.5910, -99.1838], // Lechería
+    [19.5965, -99.1795], // Salida de patio Lechería hacia el noreste
+    [19.6015, -99.1735], // Inclinación paralela a Recursos Hidráulicos
+    [19.6070, -99.1670], 
+    [19.6136, -99.1604], // Estación Cueyamil (Cruza Vía López Portillo por arriba)
+    [19.6200, -99.1510], // Tramo previo al distribuidor vial
+    [19.6256, -99.1430], // Estación La Loma (Junto al distribuidor en arco)
+    [19.6335, -99.1300], // Hacia Tultepec
+    [19.6415, -99.1170], // Teyahualco
+    [19.6510, -99.1020], 
+    [19.6640, -99.0880], // Prados Sur
+    [19.6780, -99.0750], 
+    [19.6950, -99.0665], // Nextlalpan
+    [19.7100, -99.0560], 
+    [19.7225, -99.0490], // Jaltocan
+    [19.7360, -99.0350], 
+    [19.7510, -99.0180]  // AIFA Terminal
+];
+        
 
         var map = L.map('map', { zoomControl: false }).setView([19.6000, -99.1400], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
